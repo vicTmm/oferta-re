@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="110 48 380 438" fill="none">
+  <defs>
+    <linearGradient id="body" x1="144" y1="203" x2="424" y2="459" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2445AD"/>
+      <stop offset=".55" stop-color="#2463EF"/>
+      <stop offset="1" stop-color="#087FCD"/>
+    </linearGradient>
+    <linearGradient id="eyes" x1="240" y1="280" x2="240" y2="340" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#11BA85"/>
+      <stop offset="1" stop-color="#24CA94"/>
+    </linearGradient>
+  </defs>
+  <path d="M290 195V126" stroke="#078BC2" stroke-width="16"/>
+  <circle cx="290" cy="109" r="46" stroke="#31BEF5" stroke-width="8" stroke-dasharray="12 12"/>
+  <circle cx="290" cy="109" r="25" fill="#31BEF5"/>
+  <rect x="130" y="193" width="319" height="276" rx="118" fill="url(#body)"/>
+  <rect x="173" y="235" width="234" height="175" rx="68" fill="#10182B"/>
+  <ellipse cx="239.5" cy="310" rx="25" ry="29.5" fill="url(#eyes)"/>
+  <ellipse cx="340" cy="310" rx="25" ry="29.5" fill="url(#eyes)"/>
+  <circle cx="247.5" cy="301.5" r="8.5" fill="white"/>
+  <circle cx="348" cy="301.5" r="8.5" fill="white"/>
+  <path d="M268.5 360Q289.5 377 310.5 360" stroke="#31BEF5" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="423.5" cy="419.5" r="54.5" fill="#10B981"/>
+  <path d="M403 418L419 435L445 406" stroke="white" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import csv
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from src.tratamento import FIELDNAMES, Row, Table
+from src.validacao import validate_unique_keys
 
 
 SOURCE_URL = "https://www2.susep.gov.br/menuatendimento/procura_2011.asp"
@@ -38,6 +39,8 @@ def summarize_changes(old_row: Row, new_row: Row) -> str:
 
 def compare_tables(old_rows: Table, new_rows: Table) -> dict[str, Table]:
     """Classifica diferenças entre a última base histórica e a base atual."""
+    validate_unique_keys(old_rows)
+    validate_unique_keys(new_rows)
     old_by_key = {row["chave_monitoramento"]: row for row in old_rows}
     new_by_key = {row["chave_monitoramento"]: row for row in new_rows}
 
@@ -100,7 +103,7 @@ def write_markdown_report(
 ) -> None:
     """Gera um resumo executivo da execução do monitoramento."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    generated_at = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    generated_at = datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M:%S UTC")
     total_changes = len(diff_result["added"]) + len(diff_result["removed"]) + len(diff_result["changed"])
 
     lines = [
@@ -115,15 +118,16 @@ def write_markdown_report(
         "",
         f"- Total de alterações relevantes: {total_changes}",
         f"- Novos registros: {len(diff_result['added'])}",
-        f"- Registros removidos: {len(diff_result['removed'])}",
+        f"- Registros ausentes na coleta (a confirmar): {len(diff_result['removed'])}",
         f"- Registros alterados: {len(diff_result['changed'])}",
         "- Evidência gerada: relatório CSV detalhado e snapshot histórico da base atual",
+        "- Ausência na coleta não comprova cancelamento de licença.",
         "",
     ]
 
     for label, key in [
         ("Novos registros", "added"),
-        ("Registros removidos", "removed"),
+        ("Registros ausentes na coleta (a confirmar)", "removed"),
         ("Registros alterados", "changed"),
     ]:
         lines.extend([f"## {label}", ""])

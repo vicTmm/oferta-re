@@ -224,3 +224,20 @@ outputs/logs/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 !outputs/logs/.gitkeep
+
+# Dados privados de futuras organizações não pertencem ao repositório público.
+data/private/
+data/subscribers.json
+
+# Next.js, Supabase local e credenciais
+node_modules/
+.next/
+*.tsbuildinfo
+.env.*
+!.env.example
+supabase/.temp/
+supabase/.branches/
+
+# Código TypeScript: a regra Python lib/ não deve excluir o portal.
+!web/src/lib/
+!web/src/lib/**

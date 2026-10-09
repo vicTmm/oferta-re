@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import json
 import re
-from datetime import datetime
+import sys
+from zoneinfo import ZoneInfo
+from datetime import datetime, timezone
 from pathlib import Path
 
 import altair as alt
@@ -13,61 +15,69 @@ import streamlit as st
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 HISTORY_DIR = PROJECT_ROOT / "data" / "history"
 REPORTS_DIR = PROJECT_ROOT / "outputs" / "reports"
+RUNS_DIR = PROJECT_ROOT / "outputs" / "runs"
+sys.path.insert(0, str(PROJECT_ROOT))
+from src.consulta import business_days_since, filter_entities
+
 
 
 STATUS_LABELS = {
     "novo": "Novos",
-    "removido": "Removidos",
+    "removido": "Ausentes na coleta",
     "alterado": "Alterados",
 }
 
 THEMES = {
     "Claro": {
-        "background": "#F8FAFC",
+        "background": "#F5F8FD",
         "surface": "#FFFFFF",
-        "surface_alt": "#F1F5F9",
-        "text": "#0F172A",
-        "muted": "#64748B",
-        "border": "#E2E8F0",
-        "grid": "#F1F5F9",
-        "accent": "#2563EB",
-        "local": "#4F46E5",
+        "surface_alt": "#EAF1FF",
+        "text": "#10182B",
+        "muted": "#53627A",
+        "border": "#DFE7F2",
+        "grid": "#EAF1FF",
+        "accent": "#235DDD",
+        "local": "#2445AD",
         "admitida": "#10B981",
         "eventual": "#F59E0B",
         "shadow": "rgba(148, 163, 184, 0.15)",
-        "gradient_hero": "linear-gradient(135deg, #FFFFFF 0%, #F1F5F9 100%)",
-        "hero_border": "#E2E8F0"
+        "gradient_hero": "linear-gradient(135deg, #FFFFFF 0%, #EAF1FF 100%)",
+        "hero_border": "#DFE7F2"
     },
     "Escuro": {
-        "background": "#020617",
-        "surface": "#0F172A",
-        "surface_alt": "#1E293B",
-        "text": "#F8FAFC",
+        "background": "#0C1424",
+        "surface": "#10182B",
+        "surface_alt": "#203557",
+        "text": "#F5F8FD",
         "muted": "#94A3B8",
-        "border": "#1E293B",
-        "grid": "#0F172A",
-        "accent": "#3B82F6",
-        "local": "#818CF8",
+        "border": "#203557",
+        "grid": "#10182B",
+        "accent": "#94BCFF",
+        "local": "#94BCFF",
         "admitida": "#34D399",
         "eventual": "#FBBF24",
         "shadow": "rgba(0, 0, 0, 0.5)",
-        "gradient_hero": "linear-gradient(135deg, #0F172A 0%, #020617 100%)",
-        "hero_border": "#1E293B"
+        "gradient_hero": "linear-gradient(135deg, #10182B 0%, #0C1424 100%)",
+        "hero_border": "#203557"
     },
 }
 
 
 st.set_page_config(
-    page_title="Monitoramento SUSEP",
+    page_title="Oferta Re | Resseguradoras",
     layout="wide",
 )
 
 
 def extract_timestamp(path: Path) -> datetime | None:
-    match = re.search(r"(\d{8}_\d{6})", path.name)
+    match = re.search(r"(\d{8}_\d{6})(?:_(\d{6}))?", path.name)
     if not match:
         return None
-    return datetime.strptime(match.group(1), "%Y%m%d_%H%M%S")
+    value = datetime.strptime(match.group(1), "%Y%m%d_%H%M%S")
+    if match.group(2):
+        value = value.replace(microsecond=int(match.group(2)), tzinfo=timezone.utc)
+        return value.astimezone(ZoneInfo("America/Sao_Paulo")).replace(tzinfo=None)
+    return value
 
 
 def format_timestamp(value: datetime | None) -> str:
@@ -76,9 +86,9 @@ def format_timestamp(value: datetime | None) -> str:
     return value.strftime("%d/%m/%Y %H:%M:%S")
 
 
-@st.cache_data
+@st.cache_data(ttl=60)
 def read_csv(path: str) -> pd.DataFrame:
-    return pd.read_csv(path, encoding="utf-8-sig")
+    return pd.read_csv(path, encoding="utf-8-sig", dtype=str, keep_default_na=False)
 
 
 def list_csv_files(directory: Path, pattern: str) -> list[Path]:
@@ -171,7 +181,7 @@ def inject_theme_css(theme: dict[str, str]) -> None:
                 content: '';
                 position: absolute;
                 top: 0; left: 0; right: 0; height: 4px;
-                background: linear-gradient(90deg, {theme["local"]}, {theme["admitida"]}, {theme["eventual"]});
+                background: linear-gradient(90deg, #2445AD, #235DDD, #2445AD);
             }}
 
             .hero-eyebrow {{
@@ -371,11 +381,10 @@ def render_topbar() -> str:
         st.markdown(
             """
             <div class="hero">
-                <div class="hero-eyebrow">Monitoramento regulatório</div>
-                <h1 class="hero-title">SUSEP Resseguradoras</h1>
+                <div class="hero-eyebrow">Oferta Re</div>
+                <h1 class="hero-title">Resseguradoras</h1>
                 <div class="hero-copy">
-                    Acompanhamento automatizado da base pública de resseguradoras,
-                    com histórico versionado, comparação diária e evidências de alterações.
+                    Consulte os dados coletados na SUSEP e acompanhe as diferenças entre versões.
                 </div>
             </div>
             """,
@@ -412,34 +421,72 @@ def render_metric_card(label: str, value: int | str, note: str, primary: bool = 
     )
 
 
-def render_subscription_form() -> None:
-    st.sidebar.markdown("### 🔔 Alertas de Atualização")
-    st.sidebar.markdown(
-        "Receba um e-mail sempre que a Susep alterar o status de alguma resseguradora."
-    )
-    with st.sidebar.form("email_subscription_form"):
-        email = st.text_input("Seu melhor e-mail", placeholder="exemplo@email.com")
-        submitted = st.form_submit_button("Assinar Grátis", use_container_width=True)
-        if submitted:
-            if "@" in email and "." in email:
-                data_file = PROJECT_ROOT / "data" / "subscribers.json"
-                subscribers = []
-                if data_file.exists():
-                    try:
-                        with open(data_file, "r", encoding="utf-8") as f:
-                            subscribers = json.load(f)
-                    except json.JSONDecodeError:
-                        pass
-                
-                if email not in subscribers:
-                    subscribers.append(email)
-                    with open(data_file, "w", encoding="utf-8") as f:
-                        json.dump(subscribers, f, indent=4)
-                
-                st.success("E-mail cadastrado com sucesso!")
-                st.balloons()
-            else:
-                st.error("Por favor, insira um e-mail válido.")
+def render_product_sidebar() -> None:
+    st.sidebar.title("Oferta Re")
+    st.sidebar.caption("Ofertas, contatos e comprovantes em um só lugar.")
+    st.sidebar.markdown("**Consulta de resseguradoras**")
+    st.sidebar.caption("Consulta pública disponível. Modelos, ofertas, comprovantes e integração Outlook serão adicionados nas próximas etapas.")
+    st.sidebar.info("Alertas por e-mail ainda não estão disponíveis.")
+
+
+def load_run_manifests() -> tuple[list[dict], bool]:
+    manifests, invalid = [], False
+    for path in sorted(RUNS_DIR.glob("execucao_*.json")):
+        try:
+            item = json.loads(path.read_text(encoding="utf-8"))
+            if not isinstance(item, dict) or item.get("status") not in {"validated", "failed"}:
+                raise ValueError("Manifesto inválido")
+            manifests.append(item)
+        except (OSError, ValueError):
+            invalid = True
+    return manifests, invalid
+
+
+def render_collection_status(history_file: Path | None) -> None:
+    st.caption("Fonte: SUSEP · https://www2.susep.gov.br/menuatendimento/procura_2011.asp")
+    manifests, invalid = load_run_manifests()
+    if invalid:
+        st.warning("Há registros de execução que não puderam ser lidos. A situação da coleta precisa ser verificada.")
+    if manifests and manifests[-1]["status"] == "failed":
+        st.error("A última tentativa de coleta falhou. Exibimos a última base disponível; consulte os registros da execução.")
+    if history_file is None:
+        return
+    matching = next((item for item in reversed(manifests) if item.get("snapshot") == history_file.name and item["status"] == "validated"), None)
+    collected = None
+    if matching:
+        try:
+            collected = datetime.fromisoformat(matching["finished_at"])
+            if collected.tzinfo is None:
+                raise ValueError("Horário sem fuso")
+            collected = collected.astimezone(ZoneInfo("America/Sao_Paulo"))
+            st.caption(f"Última coleta validada: {collected:%d/%m/%Y %H:%M:%S} (horário de Brasília).")
+        except (KeyError, ValueError, TypeError):
+            st.warning("O horário da coleta não pôde ser validado pelo manifesto.")
+    if collected is None:
+        collected = extract_timestamp(history_file)
+        st.caption(f"Snapshot histórico: {format_timestamp(collected)}. O arquivo antigo não informa fuso nem validação da execução.")
+    if collected and business_days_since(collected, datetime.now(ZoneInfo("America/Sao_Paulo"))) > 1:
+        st.warning("A base tem mais de um dia útil de defasagem. Confirme informações recentes na fonte oficial.")
+
+
+def render_entity_search(history_df: pd.DataFrame) -> None:
+    render_section_header("Base de resseguradoras", "Busque por nome ou CNPJ e exporte os resultados selecionados.")
+    if history_df.empty:
+        st.info("Nenhuma base disponível para consulta.")
+        return
+    left, right = st.columns([3, 1])
+    query = left.text_input("Buscar por nome ou CNPJ", placeholder="Nome, razão social ou CNPJ", key="entity_query")
+    category = right.selectbox("Tipo de resseguradora", ["Todas", *sorted(history_df["tipo"].unique())], key="entity_category")
+    filtered = filter_entities(history_df, query, category)
+    st.caption(f"{len(filtered)} de {len(history_df)} registros coletados. Ausência de resultado não comprova ausência de licença.")
+    columns = ["nome", "tipo", "cnpj", "codigo_fip", "data_autorizacao_cadastramento", "site", "email"]
+    labels = {"nome": "Resseguradora", "tipo": "Tipo", "cnpj": "CNPJ", "codigo_fip": "Código FIP", "data_autorizacao_cadastramento": "Data de autorização/cadastramento", "site": "Site", "email": "E-mail cadastral"}
+    if filtered.empty:
+        st.info("Nenhuma resseguradora encontrada com esses filtros.")
+    else:
+        st.dataframe(filtered[columns].rename(columns=labels), width="stretch", hide_index=True)
+    st.download_button("Exportar resultados CSV", filtered.to_csv(index=False).encode("utf-8-sig"), "oferta-re-resseguradoras.csv", "text/csv", key="export_entities", disabled=filtered.empty)
+    st.caption("O e-mail cadastral não foi verificado como canal de subscrição. Contatos privados serão tratados separadamente.")
 
 
 def render_section_header(title: str, caption: str) -> None:
@@ -529,12 +576,12 @@ def render_type_distribution(history_df: pd.DataFrame, theme: dict[str, str]) ->
         .properties(height=230, background=theme["surface"])
         .configure_view(strokeWidth=0)
     )
-    st.altair_chart(chart, use_container_width=True)
+    st.altair_chart(chart, width="stretch")
 
     table_df = by_type.sort_values("Quantidade", ascending=False)[
         ["Tipo", "Quantidade", "Participação"]
     ]
-    st.dataframe(table_df, use_container_width=True, hide_index=True)
+    st.dataframe(table_df, width="stretch", hide_index=True)
 
 
 def render_empty_state() -> None:
@@ -549,10 +596,12 @@ def main() -> None:
     theme = THEMES[theme_choice]
     inject_theme_css(theme)
 
-    render_subscription_form()
+    render_product_sidebar()
 
     history_df, history_file = load_latest_history()
     report_files = load_reports()
+
+    render_collection_status(history_file)
 
     if history_df.empty and not report_files:
         render_empty_state()
@@ -570,16 +619,18 @@ def main() -> None:
 
     col_main, col_stats = st.columns([1.5, 2.5], gap="large")
     with col_main:
-        render_metric_card("Total Monitorados", total_monitorado, "Registros ativos na base atual", primary=True)
+        render_metric_card("Registros coletados", total_monitorado, "Último snapshot disponível", primary=True)
     
     with col_stats:
         c1, c2, c3 = st.columns(3)
         with c1:
             render_metric_card("Novos", novos, "Último relatório")
         with c2:
-            render_metric_card("Removidos", removidos, "Último relatório")
+            render_metric_card("Ausentes", removidos, "Na coleta; a confirmar")
         with c3:
             render_metric_card("Alterados", alterados, "Último relatório")
+
+    st.caption("Diferenças entre snapshots podem incluir correções de extração. Revise os campos antes de interpretar uma alteração regulatória.")
 
     hist_str = history_file.name if history_file else "-"
     rep_str = format_timestamp(latest_report_date or latest_history_date)
@@ -590,14 +641,17 @@ def main() -> None:
                 <span class="badge-icon">🗃️</span> Último snapshot: <strong>{hist_str}</strong>
             </div>
             <div class="badge">
-                <span class="badge-icon">⏱️</span> Última execução: <strong>{rep_str}</strong>
+                <span class="badge-icon">⏱️</span> Data do relatório: <strong>{rep_str}</strong>
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    tab_resumo, tab_alteracoes, tab_historico = st.tabs(["Resumo", "Alterações", "Histórico"])
+    tab_base, tab_resumo, tab_alteracoes, tab_historico = st.tabs(["Resseguradoras", "Resumo", "Alterações", "Histórico"])
+
+    with tab_base:
+        render_entity_search(history_df)
 
     with tab_resumo:
         render_section_header(
@@ -617,6 +671,7 @@ def main() -> None:
         if not report_files:
             st.info("Nenhum relatório de alterações foi encontrado.")
         else:
+            st.caption("Ausentes na coleta são ocorrências a confirmar, não cancelamentos de licença.")
             options = {
                 f"{format_timestamp(extract_timestamp(path))} - {path.name}": path
                 for path in reversed(report_files)
@@ -632,7 +687,7 @@ def main() -> None:
                 reverse_labels = {value: key for key, value in STATUS_LABELS.items()}
                 visible_df = visible_df[visible_df["status"] == reverse_labels[selected_status]]
 
-            st.dataframe(visible_df, use_container_width=True, hide_index=True)
+            st.dataframe(visible_df, width="stretch", hide_index=True)
             st.download_button(
                 "Baixar relatório CSV",
                 data=selected_report.read_bytes(),
@@ -656,7 +711,7 @@ def main() -> None:
                 for path in reversed(history_files)
             ]
         )
-        st.dataframe(history_summary, use_container_width=True, hide_index=True)
+        st.dataframe(history_summary, width="stretch", hide_index=True)
 
 
 if __name__ == "__main__":

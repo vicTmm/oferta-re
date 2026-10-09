@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "run_id": "20261008_200044_207836",
+  "started_at": "2026-10-08T20:00:44.208392+00:00",
+  "source": "https://www2.susep.gov.br/menuatendimento/procura_2011.asp",
+  "code_sha256": "58415bba16b2213773ed36e5d1127db6dd0402190688ec68eeee1377d41c86ea",
+  "commit": null,
+  "status": "validated",
+  "previous_snapshot": "susep_resseguradoras_20260605_153735.csv",
+  "max_category_drop": 0.1,
+  "counts": {
+    "Resseguradora Admitida": 25,
+    "Resseguradora Eventual": 95,
+    "Resseguradora Local": 15
+  },
+  "parser_version": "http-form-v1",
+  "html_evidence_dir": "20261008_200044_207836",
+  "raw_file": "susep_resseguradoras_raw_20261008_200044_207836.csv",
+  "raw_sha256": "81c1df7aa337bc85e964828a1aac40ddb931921c7f78cabb5fea0c18ca869e8c",
+  "reports": [
+    "alteracoes_susep_20261008_200044_207836.csv",
+    "alteracoes_susep_20261008_200044_207836.md"
+  ],
+  "changes": {
+    "added": 4,
+    "removed": 1,
+    "changed": 131
+  },
+  "finished_at": "2026-10-08T20:01:04.771426+00:00",
+  "snapshot": "susep_resseguradoras_20261008_200044_207836.csv"
+}

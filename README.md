@@ -1,4 +1,14 @@
-# pipeline-susep-resseguradoras
+# Oferta Re
+
+SaaS para corretoras de resseguro organizarem **propostas e renovações**, ofertas ao mercado, prazos e comprovantes no ambiente da empresa. Login individual, setores compartilhados e histórico por processo.
+
+Interface Next.js/shadcn, banco/Auth/arquivos no Supabase e hospedagem prevista na Vercel. O coletor Python SUSEP permanece como módulo de apoio; Streamlit é legado. [Escopo, regras e plano do portal](docs/portal-propostas-e-renovacoes.md).
+
+Teste local: http://localhost:3000. [Demonstração da carteira](http://localhost:3000/demonstracao?tela=propostas). Após login: `/workspace/propostas`. A consulta pública está em `/resseguradoras`.
+
+Nesta versão: cadastro do negócio antes do e-mail, lista/pipeline, vigência/prazos, renovação vinculada, ofertas versionadas e respostas com comprovante recebido. Envio pelo Outlook e classificação permanecem manuais; conexão Microsoft 365 e captura automática ainda estão em planejamento. Não há cobrança ativa ou deploy Vercel concluído.
+
+## Coletor SUSEP: módulo original
 
 Pipeline de automação operacional para monitoramento regulatório de resseguradoras cadastradas na SUSEP.
 
@@ -13,7 +23,7 @@ Este pipeline transforma essa rotina em um fluxo reproduzível:
 1. coleta os dados na fonte pública da SUSEP;
 2. padroniza os campos relevantes;
 3. compara a base atual com o último snapshot histórico;
-4. registra novos, removidos e alterados;
+4. registra novos, ausentes na coleta e alterados;
 5. versiona histórico e relatórios no repositório;
 6. disponibiliza uma visão gerencial em Streamlit.
 
@@ -69,7 +79,7 @@ pipeline-susep-resseguradoras/
 
 ## Como rodar localmente
 
-Requisito: Python 3.10 ou superior.
+Requisito: Python 3.12 ou superior.
 
 No Windows, crie o ambiente virtual usando o launcher `py`:
 
@@ -82,7 +92,6 @@ Instale as dependências:
 
 ```powershell
 pip install -r requirements.txt
-python -m playwright install chromium
 ```
 
 Execute o pipeline:
@@ -153,6 +162,8 @@ Essa estrutura facilita explicar quando a base foi consultada, qual foi a fonte 
 
 ## Próximas evoluções
 
+O diagnóstico de produto, a estratégia de escala, o plano de implementação, o prompt de design e os registros para o futuro TCC estão em [docs/README.md](docs/README.md). As recomendações comerciais e de arquitetura aguardam validação.
+
 - Persistir histórico em storage externo ou banco de dados.
 - Criar testes automatizados para tratamento, comparação e dashboard.
 - Gerar relatório Excel multiplataforma com `openpyxl`.
@@ -166,3 +177,23 @@ Essa estrutura facilita explicar quando a base foi consultada, qual foi a fonte 
 3. Arquitetura: separar coleta, tratamento, comparação, logs, relatórios e dashboard.
 4. Demonstração: rodar `python -m src.main` e abrir `streamlit run app/dashboard.py`.
 5. Evolução: GitHub Actions e Streamlit transformam o MVP local em monitoramento recorrente e acompanhável em nuvem.
+
+## Integridade e testes
+
+A coleta usa o formulário público por HTTP, sem Chromium. Valida as três categorias,
+a quantidade declarada pela fonte e identificadores únicos. Quedas superiores a 10%
+por categoria são rejeitadas; o limite é operacional e pode ser ajustado por
+`SUSEP_MAX_CATEGORY_DROP` após revisão da fonte. Falhas preservam a última base válida.
+O manifesto em `outputs/runs` registra UTC, origem, contagens, hashes e erro.
+HTML e CSV brutos ficam localmente em `data/raw` e nos artefatos do Actions por 30 dias.
+A publicação restaura os arquivos em erro de I/O, mas não oferece transação entre
+processos ou garantia contra interrupção abrupta; execute um pipeline por vez.
+
+```sh
+python -m unittest discover -s tests -v
+python -m pip check
+```
+
+As dependências diretas estão fixadas; dependências transitivas ainda são resolvidas
+pelo pip. A CI verifica Python 3.12 e 3.14. Contatos privados, ofertas, Outlook e
+comprovantes estão planejados em [docs/tarefas.md](docs/tarefas.md).

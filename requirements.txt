@@ -1,4 +1,5 @@
-playwright
-pandas
-streamlit
-altair
+requests==2.34.2
+beautifulsoup4==4.15.0
+pandas==3.0.6
+streamlit==1.65.0
+altair==6.3.0

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -13,16 +13,17 @@ HISTORY_DIR = DATA_DIR / "history"
 OUTPUTS_DIR = PROJECT_ROOT / "outputs"
 LOGS_DIR = OUTPUTS_DIR / "logs"
 REPORTS_DIR = OUTPUTS_DIR / "reports"
+RUNS_DIR = OUTPUTS_DIR / "runs"
 
 
 def ensure_project_dirs() -> None:
     """Cria as pastas usadas pelo pipeline, caso ainda não existam."""
-    for directory in [RAW_DIR, PROCESSED_DIR, HISTORY_DIR, LOGS_DIR, REPORTS_DIR]:
+    for directory in [RAW_DIR, PROCESSED_DIR, HISTORY_DIR, LOGS_DIR, REPORTS_DIR, RUNS_DIR]:
         directory.mkdir(parents=True, exist_ok=True)
 
 
 def execution_timestamp() -> str:
-    return datetime.now().strftime("%Y%m%d_%H%M%S")
+    return datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
 
 
 def configure_logging() -> Path:
