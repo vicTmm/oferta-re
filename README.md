@@ -1,199 +1,52 @@
 # Oferta Re
 
-SaaS para corretoras de resseguro organizarem **propostas e renovações**, ofertas ao mercado, prazos e comprovantes no ambiente da empresa. Login individual, setores compartilhados e histórico por processo.
+Plataforma para corretoras de resseguro organizarem propostas, renovações, ofertas ao mercado, prazos e comprovantes em um ambiente compartilhado por empresa.
 
-Interface Next.js/shadcn, banco/Auth/arquivos no Supabase e hospedagem prevista na Vercel. O coletor Python SUSEP permanece como módulo de apoio; Streamlit é legado. [Escopo, regras e plano do portal](docs/portal-propostas-e-renovacoes.md).
+## Estado atual
 
-Teste local: http://localhost:3000. [Demonstração da carteira](http://localhost:3000/demonstracao?tela=propostas). Após login: `/workspace/propostas`. A consulta pública está em `/resseguradoras`.
+Aplicação Next.js/shadcn com Supabase para banco, autenticação e arquivos. Implementa equipes e setores, contatos, modelos, propostas, renovações vinculadas, ofertas versionadas e registro manual de respostas com comprovantes. Há demonstração com dados fictícios e consulta pública de resseguradoras.
 
-Nesta versão: cadastro do negócio antes do e-mail, lista/pipeline, vigência/prazos, renovação vinculada, ofertas versionadas e respostas com comprovante recebido. Envio pelo Outlook e classificação permanecem manuais; conexão Microsoft 365 e captura automática ainda estão em planejamento. Não há cobrança ativa ou deploy Vercel concluído.
+Envio pelo Outlook e classificação de respostas permanecem manuais. Integração Microsoft 365, cobrança e deploy Vercel ainda não estão concluídos.
 
-## Coletor SUSEP: módulo original
+## Desenvolvimento local
 
-Pipeline de automação operacional para monitoramento regulatório de resseguradoras cadastradas na SUSEP.
-
-O projeto coleta a base pública da SUSEP, padroniza os registros, compara a base atual com o último histórico disponível e gera evidências de alterações. A proposta é reduzir trabalho manual, aumentar rastreabilidade e demonstrar a evolução de um MVP local para uma execução automatizada em nuvem com GitHub Actions e visualização em Streamlit.
-
-## Contexto
-
-Em rotinas de resseguro, acompanhar alterações em cadastros regulatórios ajuda a manter controles internos atualizados e reduz o risco de usar informações defasadas. Sem automação, a verificação tende a depender de consultas manuais, planilhas avulsas e comparações pouco rastreáveis.
-
-Este pipeline transforma essa rotina em um fluxo reproduzível:
-
-1. coleta os dados na fonte pública da SUSEP;
-2. padroniza os campos relevantes;
-3. compara a base atual com o último snapshot histórico;
-4. registra novos, ausentes na coleta e alterados;
-5. versiona histórico e relatórios no repositório;
-6. disponibiliza uma visão gerencial em Streamlit.
-
-## Resultado esperado
-
-Ao final de cada execução, o projeto entrega:
-
-- base bruta coletada em `data/raw`;
-- base padronizada atual em `data/processed`;
-- snapshot histórico versionável em `data/history`;
-- log da execução em `outputs/logs`;
-- relatório de alterações versionável em `outputs/reports`;
-- dashboard em `app/dashboard.py` para acompanhar as análises.
-
-Na primeira execução, o pipeline cria um baseline histórico. Nas execuções seguintes, passa a comparar a nova coleta com a última base histórica.
-
-## Arquitetura
-
-```text
-pipeline-susep-resseguradoras/
-|-- app/
-|   `-- dashboard.py
-|-- src/
-|   |-- main.py
-|   |-- coleta_susep.py
-|   |-- tratamento.py
-|   |-- comparacao.py
-|   `-- utils.py
-|-- data/
-|   |-- raw/
-|   |-- processed/
-|   `-- history/
-|-- outputs/
-|   |-- logs/
-|   `-- reports/
-|-- .github/
-|   `-- workflows/
-|       `-- monitoramento-susep.yml
-|-- requirements.txt
-|-- README.md
-`-- .gitignore
-```
-
-## Componentes
-
-- `src/main.py`: ponto de entrada e orquestração do pipeline.
-- `src/coleta_susep.py`: coleta os dados de resseguradoras locais, admitidas e eventuais na página pública da SUSEP.
-- `src/tratamento.py`: limpa valores, padroniza colunas e cria a chave de monitoramento.
-- `src/comparacao.py`: identifica registros novos, removidos e alterados.
-- `src/utils.py`: centraliza caminhos do projeto, criação de diretórios e configuração de logs.
-- `app/dashboard.py`: dashboard Streamlit para consulta do histórico e dos relatórios.
-- `.github/workflows/monitoramento-susep.yml`: executa o pipeline em ambiente Linux no GitHub Actions.
-
-## Como rodar localmente
-
-Requisito: Python 3.12 ou superior.
-
-No Windows, crie o ambiente virtual usando o launcher `py`:
-
-```powershell
-py -3.14 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
-
-Instale as dependências:
-
-```powershell
-pip install -r requirements.txt
-```
-
-Execute o pipeline:
-
-```powershell
-python -m src.main
-```
-
-Execute o dashboard:
-
-```powershell
-streamlit run app/dashboard.py
-```
-
-Todos os caminhos são relativos ao repositório. O projeto não depende de pastas locais específicas, rede corporativa, Outlook ou planilhas abertas manualmente.
-
-## Execução em nuvem
-
-O workflow do GitHub Actions permite duas formas de execução:
-
-- manual, por `workflow_dispatch`;
-- agendada, em dias úteis, pelo cron configurado.
-
-Durante a execução em nuvem, o Actions instala Python, instala as dependências, prepara o Chromium usado pelo Playwright, roda `python -m src.main`, publica `data/` e `outputs/` como artefatos por 30 dias e commita os arquivos de `data/history` e `outputs/reports` no repositório.
-
-Esse desenho mostra a evolução natural do MVP:
-
-- fase 1: execução local controlada;
-- fase 2: histórico e relatórios versionáveis;
-- fase 3: automação recorrente em nuvem;
-- fase 4: dashboard em Streamlit para acompanhamento diário.
-
-## Dashboard Streamlit
-
-O dashboard lê os arquivos versionados pelo GitHub Actions e apresenta:
-
-- total de registros monitorados;
-- quantidade de registros novos, removidos e alterados na última execução;
-- distribuição da base atual por tipo de resseguradora;
-- tabela filtrável de alterações;
-- histórico de snapshots;
-- download do relatório CSV.
-
-Para publicar no Streamlit Community Cloud, use:
-
-- repositório: este projeto no GitHub;
-- branch: `main` ou a branch principal do repositório;
-- arquivo principal: `app/dashboard.py`.
-
-Depois do deploy, cada commit feito pelo GitHub Actions com novos relatórios atualiza a base lida pelo dashboard.
-
-## Rastreabilidade
-
-A rastreabilidade é sustentada por três elementos:
-
-- snapshots históricos em CSV, um por execução;
-- relatórios de alterações em CSV e Markdown;
-- logs com horário, etapa e arquivos gerados.
-
-Essa estrutura facilita explicar quando a base foi consultada, qual foi a fonte usada e o que mudou entre duas execuções.
-
-## Limites do MVP
-
-- A coleta depende da estrutura atual da página pública da SUSEP.
-- O histórico passa a ser versionado no próprio repositório, solução simples e adequada para MVP.
-- Ainda não há notificação automática para e-mail, Teams ou Slack.
-- O dashboard depende dos arquivos já gerados e versionados pelo pipeline.
-
-## Próximas evoluções
-
-O diagnóstico de produto, a estratégia de escala, o plano de implementação, o prompt de design e os registros para o futuro TCC estão em [docs/README.md](docs/README.md). As recomendações comerciais e de arquitetura aguardam validação.
-
-- Persistir histórico em storage externo ou banco de dados.
-- Criar testes automatizados para tratamento, comparação e dashboard.
-- Gerar relatório Excel multiplataforma com `openpyxl`.
-- Adicionar notificações usando secrets do GitHub.
-- Criar indicadores de tendência e tempo desde a última alteração por entidade.
-
-## Roteiro sugerido para apresentação
-
-1. Problema: acompanhamento manual de cadastros regulatórios consome tempo e gera pouca rastreabilidade.
-2. Solução: pipeline coleta, trata, compara, gera evidências e versiona histórico.
-3. Arquitetura: separar coleta, tratamento, comparação, logs, relatórios e dashboard.
-4. Demonstração: rodar `python -m src.main` e abrir `streamlit run app/dashboard.py`.
-5. Evolução: GitHub Actions e Streamlit transformam o MVP local em monitoramento recorrente e acompanhável em nuvem.
-
-## Integridade e testes
-
-A coleta usa o formulário público por HTTP, sem Chromium. Valida as três categorias,
-a quantidade declarada pela fonte e identificadores únicos. Quedas superiores a 10%
-por categoria são rejeitadas; o limite é operacional e pode ser ajustado por
-`SUSEP_MAX_CATEGORY_DROP` após revisão da fonte. Falhas preservam a última base válida.
-O manifesto em `outputs/runs` registra UTC, origem, contagens, hashes e erro.
-HTML e CSV brutos ficam localmente em `data/raw` e nos artefatos do Actions por 30 dias.
-A publicação restaura os arquivos em erro de I/O, mas não oferece transação entre
-processos ou garantia contra interrupção abrupta; execute um pipeline por vez.
+Requisito: Node.js 24 e npm. Execute:
 
 ```sh
-python -m unittest discover -s tests -v
-python -m pip check
+cd web
+npm ci
+cp .env.example .env.local
+npm run dev
 ```
 
-As dependências diretas estão fixadas; dependências transitivas ainda são resolvidas
-pelo pip. A CI verifica Python 3.12 e 3.14. Contatos privados, ofertas, Outlook e
-comprovantes estão planejados em [docs/tarefas.md](docs/tarefas.md).
+Configure `.env.local` conforme o exemplo. Sem configuração Supabase, a consulta pública utiliza o catálogo local; os fluxos autenticados dependem do backend.
+
+Abra http://localhost:3000 ou http://localhost:3000/demonstracao?tela=propostas.
+
+## Verificação
+
+```sh
+cd web
+npm test
+npm run typecheck
+npm run build
+```
+
+Os testes de banco usam PostgreSQL em PGlite e não exigem credenciais de produção. A CI executa os testes, a verificação TypeScript e o build.
+
+## Estrutura
+
+- `web/`: aplicação, componentes, catálogo público e testes.
+- `supabase/`: migrações, configuração local e endpoint de ingestão SUSEP.
+- `docs/`: produto, decisões, design, planos e evidências.
+- `scripts/provision_ingestion.py`: preparação local da chave dedicada de ingestão; não executar para migrar o repositório, pois altera o hash esperado pelo endpoint.
+
+## Dados SUSEP
+
+O coletor Python, o dashboard Streamlit e os históricos continuam no [pipeline-susep-resseguradoras](https://github.com/vicTmm/pipeline-susep-resseguradoras). O Oferta Re mantém o catálogo público de contingência e o endpoint Supabase `ingest-susep`. O coletor pode continuar publicando no mesmo backend; a mudança de repositório não altera essa conexão.
+
+## Implantação e documentação
+
+Na Vercel, usar Root Directory `web`. Configurar somente as variáveis indicadas em `web/.env.example`; chaves administrativas e token do coletor não pertencem ao frontend.
+
+Consulte [documentação do produto](docs/README.md), [configuração Supabase/Vercel](docs/migracao-supabase-vercel.md) e [registro da separação dos repositórios](docs/migracao-repositorio.md).

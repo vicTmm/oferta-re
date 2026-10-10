@@ -197,3 +197,8 @@ Implementados cadastro sem depender de contatos, carteira com filtros e pipeline
 Verificação: 37 testes Node passaram, incluindo PostgreSQL/RLS, revisões concorrentes, renovação, evidências e calendário brasileiro. TypeScript e build passaram. Sexta migração aplicada e conferida no Supabase. Navegador verificou filtros, pipeline, detalhe de renovação e leitura privada com sessão existente; ambiente privado conferido a 390 px sem transbordamento horizontal. Nenhuma fixture privada foi criada no serviço hospedado. Evidência: [carteira de propostas](design/portal-propostas-desktop.jpg).
 
 Limites: gravação/upload com dados reais no serviço hospedado ainda requer homologação. Envio e captura automática Microsoft 365, condições comerciais estruturadas, alertas, faturamento e publicação Vercel permanecem pendentes. Nenhum commit/push realizado nesta etapa. A documentação distingue capacidade implementada de integração planejada; nenhuma redução de tempo ou conformidade foi medida. [Escopo e decisões](portal-propostas-e-renovacoes.md).
+
+
+## 10/10/2026 — Separação do produto e coletor
+
+Problema: produto Oferta Re e coletor SUSEP compartilhavam o repositório. A mudança autorizada importa o histórico para `vicTmm/oferta-re` e separa a árvore atual, preservando a integração pública Supabase. Alternativa: duplicar todo o pipeline; descartada para evitar duplicar coleta agendada. Registro e verificações em [migração do repositório](migracao-repositorio.md). Commit identificável no histórico pela mensagem `chore: separar Oferta Re em repositorio proprio`. Limites: sem deploy ou alteração do backend; validação Auth/Storage de produção permanece pendente.

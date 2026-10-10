@@ -1,5 +1,7 @@
 # Documentação do produto e do TCC
 
+> Atualização de 10/10/2026: o Oferta Re agora está em https://github.com/vicTmm/oferta-re. O coletor e Streamlit permanecem no repositório original. Consulte [a separação dos repositórios](migracao-repositorio.md); os registros anteriores abaixo preservam o contexto histórico.
+
 A interface principal agora é Next.js/shadcn, com catálogo e fundação privada no Supabase. [Estado da migração, configuração e próximas tarefas](migracao-supabase-vercel.md). Teste local: http://localhost:3000. Streamlit permanece como interface legada.
 
 Início: 08/10/2026. Código analisado: commit `8177239`, no checkout local. As recomendações aguardam validação com o autor e com usuários; não representam decisões comerciais aprovadas.

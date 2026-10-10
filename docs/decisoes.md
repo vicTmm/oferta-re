@@ -199,3 +199,8 @@ Data: 08/10/2026. Estado: solicitado pelo autor e implementado nesta primeira am
 Entregues página inicial, carteira/lista/pipeline, dados de vigência/prazo/linha/setor, acompanhamento com revisão e motivo de encerramento, renovação vinculada, histórico e versões de oferta no processo. Papéis/compartilhamento por empresa foram preservados. Registros legados encerrados não viram colocação bem-sucedida. Novas respostas exigem comprovante efetivamente recebido; classificação não conclui o negócio. [Implementação e próximos passos](portal-propostas-e-renovacoes.md).
 
 Enviar/rascunhar e capturar respostas automaticamente pelo Outlook continua dependente da conexão Microsoft 365 autorizada. Condições estruturadas, responsabilidades por pessoa, alertas, exportação de auditoria e cobrança são evoluções explicitadas. Critério de revisão: tempo até primeira oferta, recuperação de histórico, renovação assistida e feedback de piloto. Não ampliar para seguros diretos sem nova decisão do autor.
+
+
+## 10/10/2026 — Repositório próprio para Oferta Re
+
+A pedido do autor, migrar a branch e os artefatos do produto para `vicTmm/oferta-re`, preservando o histórico. Separar aplicação, Supabase e documentação do coletor Python, que permanece na origem. Manter a branch original como segurança, sem alterar a main da origem. Detalhes em [migração do repositório](migracao-repositorio.md).

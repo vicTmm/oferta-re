@@ -1,5 +1,7 @@
 # Migração para Supabase e Vercel
 
+> Atualização de 10/10/2026: o Oferta Re agora está em https://github.com/vicTmm/oferta-re. O coletor e Streamlit permanecem no repositório original. Consulte [a separação dos repositórios](migracao-repositorio.md); os registros anteriores abaixo preservam o contexto histórico.
+
 Atualização: 08/10/2026. Arquitetura escolhida pelo autor: Supabase para dados, autenticação e arquivos; Vercel para Next.js. Python permanece no coletor do GitHub Actions. A interface principal passa de Streamlit para Next.js com shadcn/ui e a identidade Oferta Re.
 
 ## Implementado e verificado
