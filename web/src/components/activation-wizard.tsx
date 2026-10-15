@@ -308,11 +308,11 @@ export function ActivationWizard({
           {demo ? "Demonstração · dados fictícios" : "Configuração da empresa"}
         </p>
         <h1 className="text-3xl font-semibold tracking-tight">
-          Um ambiente com a cara da sua operação
+          Configure sua corretora
         </h1>
         <p className="max-w-2xl text-muted-foreground">
-          Conte como sua corretora trabalha. Você pode salvar o progresso e
-          completar os detalhes depois.
+          Defina os dados da empresa, os setores e as preferências de trabalho.
+          Você pode salvar o progresso e completar os detalhes depois.
         </p>
       </header>
       {demo && (
@@ -342,10 +342,10 @@ export function ActivationWizard({
               onClick={() => navigate(index)}
               aria-current={index === step ? "step" : undefined}
               className={cn(
-                "flex h-full w-full flex-col items-center gap-2 rounded-xl border px-2 py-3 text-xs transition-colors sm:flex-row sm:justify-center sm:text-sm",
+                "flex h-full w-full flex-col items-center gap-2 border-b-2 px-2 py-3 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-ring sm:flex-row sm:justify-start sm:text-sm",
                 index === step
-                  ? "border-primary bg-primary/5 text-primary"
-                  : "bg-card text-muted-foreground",
+                  ? "border-primary text-primary"
+                  : "border-border text-muted-foreground",
                 index > step && "opacity-60",
               )}
             >

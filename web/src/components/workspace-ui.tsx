@@ -7,12 +7,10 @@ import {
   Paperclip,
   LayoutDashboard,
 } from "lucide-react";
-import { buttonVariants } from "./ui/button";
 import { Field, FieldLabel } from "./ui/field";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
-import { cn } from "@/lib/utils";
 const tabs = [
   ["", "Visão geral", LayoutDashboard],
   ["/contatos", "Contatos", Users],
@@ -39,7 +37,7 @@ export function WorkspaceNav({
         </p>
         <p className="mt-1 text-sm text-muted-foreground">{org.name}</p>
       </div>
-      <nav aria-label="Área da corretora" className="flex flex-wrap gap-2">
+      <nav aria-label="Área da corretora" className="workspace-tabs">
         {tabs
           .filter(([path]) => path !== "/ativacao" || canManage)
           .map(([path, label, Icon]) => (
@@ -47,12 +45,7 @@ export function WorkspaceNav({
               key={path}
               href={`/workspace${path}?org=${org.id}`}
               aria-current={active === path ? "page" : undefined}
-              className={cn(
-                buttonVariants({
-                  variant: active === path ? "default" : "outline",
-                  size: "sm",
-                }),
-              )}
+              className="workspace-tab flex items-center gap-2"
             >
               <Icon data-icon="inline-start" />
               {label}

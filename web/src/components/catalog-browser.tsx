@@ -1,15 +1,7 @@
 "use client";
 import { TooltipHint } from "./tooltip-hint";
 import { useState } from "react";
-import {
-  Download,
-  Building2,
-  Globe2,
-  ShieldCheck,
-  CircleAlert,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Download, CircleAlert, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Catalog } from "@/lib/catalog";
 import {
   businessDaysOld,
@@ -89,26 +81,18 @@ export function CatalogBrowser({ catalog }: { catalog: Catalog }) {
     {
       label: "Resseguradoras na base",
       value: catalog.records.length,
-      icon: Building2,
-      description: "Última coleta validada",
     },
     {
       label: "Locais",
       value: catalog.records.filter((r) => r.tipo === categories[1]).length,
-      icon: ShieldCheck,
-      description: "Categoria cadastral SUSEP",
     },
     {
       label: "Admitidas",
       value: catalog.records.filter((r) => r.tipo === categories[2]).length,
-      icon: Globe2,
-      description: "Categoria cadastral SUSEP",
     },
     {
       label: "Eventuais",
       value: catalog.records.filter((r) => r.tipo === categories[3]).length,
-      icon: Globe2,
-      description: "Categoria cadastral SUSEP",
     },
   ];
   return (
@@ -166,26 +150,19 @@ export function CatalogBrowser({ catalog }: { catalog: Catalog }) {
         </Alert>
       )}
       <section
-        className="grid grid-cols-2 gap-4 lg:grid-cols-4"
+        className="grid grid-cols-2 gap-y-5 border-y py-5 lg:grid-cols-4"
         aria-label="Resumo da base"
       >
         {metrics.map((metric) => (
-          <Card key={metric.label}>
-            <CardHeader>
-              <CardDescription>{metric.label}</CardDescription>
-              <CardTitle className="flex items-center justify-between">
-                <span className="text-3xl font-semibold tracking-tight">
-                  {metric.value}
-                </span>
-                <metric.icon className="size-5 text-primary" />
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs text-muted-foreground">
-                {metric.description}
-              </p>
-            </CardContent>
-          </Card>
+          <div
+            key={metric.label}
+            className="border-l-2 pl-4 first:border-primary"
+          >
+            <p className="text-xs text-muted-foreground">{metric.label}</p>
+            <p className="mt-2 text-3xl font-semibold tabular-nums">
+              {metric.value}
+            </p>
+          </div>
         ))}
       </section>
       <Card>
@@ -218,7 +195,7 @@ export function CatalogBrowser({ catalog }: { catalog: Catalog }) {
                   setPage(0);
                 }}
               >
-                <SelectTrigger id="category" className="w-full">
+                <SelectTrigger id="category" className="h-10 w-full">
                   <SelectValue>
                     {category === "Todas"
                       ? "Todas as categorias"

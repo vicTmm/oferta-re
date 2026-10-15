@@ -24,6 +24,7 @@ export function ProposalForm({
   renewFrom,
   initialTemplate,
   demo = false,
+  onMockSubmit,
 }: {
   org: string;
   departments: { id: string; name: string }[];
@@ -33,6 +34,7 @@ export function ProposalForm({
   renewFrom?: Proposal;
   initialTemplate?: string;
   demo?: boolean;
+  onMockSubmit?: (data: FormData) => void;
 }) {
   const defaults = proposal ?? renewFrom;
   const [kind, setKind] = useState(
@@ -62,7 +64,14 @@ export function ProposalForm({
   return (
     <form
       action={demo ? undefined : saveProposal}
-      onSubmit={demo ? (e) => e.preventDefault() : undefined}
+      onSubmit={
+        demo
+          ? (e) => {
+              e.preventDefault();
+              onMockSubmit?.(new FormData(e.currentTarget));
+            }
+          : undefined
+      }
       className="flex flex-col gap-5"
     >
       <input type="hidden" name="org" value={org} />
@@ -272,7 +281,7 @@ export function ProposalForm({
           Prazos são controles visuais; não há lembretes automáticos ativos.
         </p>
       </FieldGroup>
-      <SubmitButton disabled={demo}>
+      <SubmitButton className="self-start" disabled={demo && !onMockSubmit}>
         {proposal
           ? "Salvar acompanhamento"
           : kind === "renewal"

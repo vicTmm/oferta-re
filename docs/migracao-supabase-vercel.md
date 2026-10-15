@@ -50,3 +50,15 @@ Interfaces de contatos, modelos, ofertas, Outlook e comprovantes ainda não est�
 ## Atualização: telas operacionais
 
 Uma terceira migração foi aplicada e as telas de contatos, modelos, ofertas e comprovantes foram implementadas. A seção anterior registra a fundação inicial. Consulte [estado atual das telas e verificações](telas-e-fluxos.md).
+
+## Atualização: conexão e recuperação de acesso — 11/10/2026
+
+O checkout local está conectado ao projeto `vssghglrtxqkfpsdfeik` em `web/.env.local` (ignorado pelo Git, permissão 0600), usando apenas URL e chave publicável. A conta confirmada e a organização DEV INFOTECH existentes foram preservadas. As seis migrações operacionais já estavam aplicadas; não houve reaplicação nem criação de outra empresa.
+
+Foi aplicada a migração `20261011183925_restrict_rls_trigger_access.sql`, que revoga execução da função interna de event trigger `rls_auto_enable()` para PUBLIC, anon e authenticated. O trigger continua habilitado; as RPCs operacionais que precisam de SECURITY DEFINER e verificação de associação à empresa mantêm seu acesso.
+
+A recuperação de senha agora está disponível em `/recuperar-senha`, acessível por “Esqueci minha senha” no login. O fluxo usa Supabase Auth/PKCE, callback com destinos fixos e `/redefinir-senha` protegido por sessão. A senha exige 12–128 caracteres e confirmação; o usuário solicita o envio pelo formulário. Configure a Site URL do Supabase para o endereço utilizado e permita a callback, incluindo a recuperação: `http://localhost:3000/auth/callback?next=/redefinir-senha`. Para produção, substitua localhost pelo domínio publicado. URLs locais do CLI não alteram automaticamente as configurações hospedadas.
+
+Verificações remotas: todas as 22 tabelas públicas com RLS; responsável confirmado associado à empresa; bucket privado com limite de 25 MiB; catálogo anônimo HTTP 200 e contatos privados HTTP 401. Um ensaio SQL transacional no banco hospedado validou contato → proposta → oferta → envio informado, rejeição de resposta sem comprovante, renovação vinculada e isolamento de usuário externo/anon. Todo o ensaio foi revertido, sem registros de teste persistentes e sem enviar e-mails. Isso valida o banco, não substitui login e upload/download reais pelo navegador.
+
+Pendente de interação do usuário: solicitar e abrir o e-mail de recuperação, definir a nova senha e entrar na conta existente. Após esse acesso, validar Auth/Storage no navegador. Publicação Vercel, SMTP de produção e integração Microsoft 365 continuam pendentes. Não foram contratados serviços nem configurada cobrança.

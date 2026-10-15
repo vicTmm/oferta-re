@@ -202,3 +202,7 @@ Limites: gravação/upload com dados reais no serviço hospedado ainda requer ho
 ## 10/10/2026 — Separação do produto e coletor
 
 Problema: produto Oferta Re e coletor SUSEP compartilhavam o repositório. A mudança autorizada importa o histórico para `vicTmm/oferta-re` e separa a árvore atual, preservando a integração pública Supabase. Alternativa: duplicar todo o pipeline; descartada para evitar duplicar coleta agendada. Registro e verificações em [migração do repositório](migracao-repositorio.md). Commit identificável no histórico pela mensagem `chore: separar Oferta Re em repositorio proprio`. Limites: sem deploy ou alteração do backend; validação Auth/Storage de produção permanece pendente.
+
+### 11/10/2026 — Conexão real e recuperação de acesso
+
+Problema: o checkout estava sem configuração Supabase e o autor não lembrava a senha da conta existente. Alternativas: criar outro usuário ou preservar a conta com recuperação oficial; escolhida a segunda pelo autor. Mudanças: `.env.local` ignorado com chave publicável, telas de recuperação/redefinição e callback com destinos fixos; migração para restringir helper interno de event trigger. Verificação: APIs públicas/privadas hospedadas, permissões, bucket e ensaio SQL com rollback para propostas/ofertas/renovações e isolamento. Limites: entrega do e-mail e ciclo Auth/Storage pelo navegador dependem da recuperação pelo usuário. Commit: alterações ainda locais, sem publicação.

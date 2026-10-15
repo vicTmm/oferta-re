@@ -9,13 +9,15 @@ import { cn } from "@/lib/utils";
 export function AppShell({
   children,
   active = "catalog",
+  demo = false,
 }: {
   children: React.ReactNode;
+  demo?: boolean;
   active?: "home" | "catalog" | "regulation" | "workspace" | "proposals";
 }) {
   const items = [
     {
-      href: "/workspace/propostas",
+      href: demo ? "/demonstracao?tela=propostas" : "/workspace/propostas",
       label: "Propostas e renovações",
       icon: BriefcaseBusiness,
       key: "proposals",
@@ -33,7 +35,7 @@ export function AppShell({
       key: "regulation",
     },
     {
-      href: "/workspace",
+      href: demo ? "/demonstracao" : "/workspace",
       label: "Meu ambiente",
       icon: Library,
       key: "workspace",

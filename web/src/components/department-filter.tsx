@@ -13,7 +13,7 @@ export function DepartmentFilter({
   return (
     <form className="flex flex-wrap items-end gap-3">
       <input type="hidden" name="org" value={org} />
-      <Field>
+      <Field className="w-full sm:w-80">
         <div className="flex items-center gap-1.5">
           <FieldLabel htmlFor="sector-filter">Organizar por setor</FieldLabel>
           <HelpTooltip

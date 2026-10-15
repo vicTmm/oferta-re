@@ -23,6 +23,8 @@ Configure `.env.local` conforme o exemplo. Sem configuração Supabase, a consul
 
 Abra http://localhost:3000 ou http://localhost:3000/demonstracao?tela=propostas.
 
+O ambiente mock em `/demonstracao` dispensa conta e Supabase. Também há um botão de acesso em `/entrar`. Permite cadastrar e acompanhar propostas e renovações, contatos, modelos, setores e equipe, preparar versões de ofertas, simular envios e registrar respostas com comprovantes. Os dados ficam no `localStorage` deste navegador; anexos são limitados a 1 MB por arquivo e à capacidade de armazenamento local. Nenhum e-mail ou convite é enviado. Use “Restaurar demonstração” para apagar os testes e recuperar a base fictícia.
+
 ## Verificação
 
 ```sh

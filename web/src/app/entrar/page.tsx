@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { buttonVariants } from "@/components/ui/button";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { supabaseConfig } from "@/lib/supabase/config";
@@ -18,10 +19,10 @@ export const dynamic = "force-dynamic";
 export default async function Login({
   searchParams,
 }: {
-  searchParams: Promise<{ erro?: string }>;
+  searchParams: Promise<{ erro?: string; senha?: string }>;
 }) {
   const configured = !!supabaseConfig();
-  const { erro } = await searchParams;
+  const { erro, senha } = await searchParams;
   return (
     <AppShell active="workspace">
       <Card className="mx-auto w-full max-w-md">
@@ -32,6 +33,12 @@ export default async function Login({
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-5">
+          <Link href="/demonstracao" className={buttonVariants()}>
+            Entrar no ambiente mock sem conta
+          </Link>
+          <p className="text-sm text-muted-foreground">
+            Teste as funcionalidades com dados fictícios salvos neste navegador.
+          </p>
           {!configured && (
             <Alert>
               <AlertTitle>Área privada em configuração</AlertTitle>
@@ -41,11 +48,23 @@ export default async function Login({
               </AlertDescription>
             </Alert>
           )}
+          {senha === "atualizada" && (
+            <Alert>
+              <AlertTitle>Senha atualizada</AlertTitle>
+              <AlertDescription>Entre com sua nova senha.</AlertDescription>
+            </Alert>
+          )}
           {erro && (
             <Alert variant="destructive">
               <AlertTitle>Não foi possível entrar</AlertTitle>
               <AlertDescription>
-                Confira seus dados e tente novamente.
+                {erro === "link"
+                  ? "O link expirou ou já foi utilizado. Solicite outro link de recuperação."
+                  : erro === "confirmacao"
+                    ? "Confirme seu e-mail antes de entrar."
+                    : erro === "limite"
+                      ? "Aguarde alguns minutos e tente novamente."
+                      : "Confira seu e-mail e senha. Se não lembrar a senha, use a recuperação de acesso."}
               </AlertDescription>
             </Alert>
           )}
@@ -78,6 +97,12 @@ export default async function Login({
               Entrar
             </Button>
           </form>
+          <Link
+            href="/recuperar-senha"
+            className="text-sm text-primary underline underline-offset-4"
+          >
+            Esqueci minha senha
+          </Link>
         </CardContent>
         <CardFooter className="flex flex-wrap justify-between gap-3">
           <Link className="text-sm underline underline-offset-4" href="/">

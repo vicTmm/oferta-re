@@ -1,3 +1,4 @@
+import { normalize } from "@/lib/catalog-utils";
 import { AppShell } from "@/components/app-shell";
 import { WorkspaceNav, TextField, Feedback } from "@/components/workspace-ui";
 import { workspaceContext, checked } from "@/lib/workspace";
@@ -59,9 +60,9 @@ export default async function Contacts({
         (p.setor === "geral" ? !c.department_id : c.department_id === p.setor),
     )
     .filter((c) =>
-      `${c.name} ${c.email} ${names.get(c.reinsurer_key) ?? ""} ${c.specialties.join(" ")}`
-        .toLocaleLowerCase("pt-BR")
-        .includes((p.q ?? "").toLocaleLowerCase("pt-BR")),
+      normalize(
+        `${c.name} ${c.email} ${names.get(c.reinsurer_key) ?? ""} ${c.specialties.join(" ")}`,
+      ).includes(normalize((p.q ?? "").trim())),
     );
   return (
     <AppShell active="workspace">

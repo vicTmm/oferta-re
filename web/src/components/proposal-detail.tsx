@@ -128,7 +128,7 @@ export function ProposalDetail({
           </Link>
         )}
       </header>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-y-5 border-y py-5 sm:grid-cols-2 lg:grid-cols-4">
         {[
           [
             "Setor / linha",
@@ -140,11 +140,11 @@ export function ProposalDetail({
           ],
           ["Prazo da próxima ação", dateLabel(proposal.due_date)],
           [
-            "Retornos por destinatário/versão",
+            "Retornos por destinatário e versão",
             `${responded} de ${recipients.length} · ${sent} envios informados`,
           ],
         ].map(([label, value]) => (
-          <div key={label} className="rounded-xl border bg-card p-4">
+          <div key={label} className="border-l-2 pl-4 first:border-primary">
             <p className="text-xs text-muted-foreground">{label}</p>
             <p className="mt-2 text-sm font-medium">{value}</p>
           </div>

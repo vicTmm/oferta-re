@@ -39,7 +39,7 @@ export default function Home() {
           Login individual, ambiente por empresa e organização por setor.
         </p>
       </section>
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <section className="grid gap-x-8 gap-y-6 border-y py-6 sm:grid-cols-2 lg:grid-cols-3">
         {[
           [
             BriefcaseBusiness,
@@ -74,10 +74,7 @@ export default function Home() {
         ].map(([Icon, title, description]) => {
           const I = Icon as typeof BriefcaseBusiness;
           return (
-            <article
-              key={title as string}
-              className="rounded-xl border bg-card p-6"
-            >
+            <article key={title as string} className="py-3">
               <I className="size-6 text-primary" />
               <h2 className="mt-4 font-semibold">{title as string}</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">

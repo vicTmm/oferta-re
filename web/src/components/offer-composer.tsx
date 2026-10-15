@@ -1,4 +1,5 @@
 "use client";
+import { normalize } from "@/lib/catalog-utils";
 import { DepartmentField } from "./department-field";
 import { useState } from "react";
 import {
@@ -37,6 +38,7 @@ export function OfferComposer({
   contacts,
   initial,
   demo = false,
+  onMockSubmit,
   operation,
   offerId,
   draft,
@@ -47,6 +49,7 @@ export function OfferComposer({
   contacts: Contact[];
   initial?: string;
   demo?: boolean;
+  onMockSubmit?: (data: FormData) => void;
   operation?: { id: string; title: string; reference: string };
   offerId?: string;
   draft?: { subject: string; body: string; signature: string };
@@ -66,8 +69,15 @@ export function OfferComposer({
   return (
     <form
       action={demo ? undefined : prepareOffer}
-      onSubmit={demo ? (e) => e.preventDefault() : undefined}
-      className="flex flex-col gap-6"
+      onSubmit={
+        demo
+          ? (e) => {
+              e.preventDefault();
+              onMockSubmit?.(new FormData(e.currentTarget));
+            }
+          : undefined
+      }
+      className="offer-editor flex flex-col gap-6"
     >
       <input type="hidden" name="org" value={org} />
       {operation && (
@@ -201,6 +211,7 @@ export function OfferComposer({
                     Buscar na sua base
                   </FieldLabel>
                   <Input
+                    type="search"
                     id="contact-search"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
@@ -209,15 +220,19 @@ export function OfferComposer({
                 </Field>
                 <FieldSet>
                   <FieldLegend>Selecionar contatos</FieldLegend>
-                  <div className="flex max-h-72 flex-col gap-4 overflow-auto">
+                  <div className="flex max-h-80 flex-col divide-y overflow-auto">
                     {contacts
                       .filter((c) =>
-                        `${c.name} ${c.company} ${c.email}`
-                          .toLowerCase()
-                          .includes(query.toLowerCase()),
+                        normalize(`${c.name} ${c.company} ${c.email}`).includes(
+                          normalize(query.trim()),
+                        ),
                       )
                       .map((c) => (
-                        <Field key={c.id} orientation="horizontal">
+                        <Field
+                          key={c.id}
+                          orientation="horizontal"
+                          className="gap-3 py-3"
+                        >
                           <Checkbox
                             id={c.id}
                             checked={chosen.includes(c.id)}
@@ -231,7 +246,7 @@ export function OfferComposer({
                           />
                           <FieldLabel
                             htmlFor={c.id}
-                            className="flex flex-col items-start gap-1"
+                            className="min-w-0 cursor-pointer flex-col items-start gap-1 font-normal [&>span]:break-words"
                           >
                             <span>
                               {c.name} · {c.company}
@@ -250,6 +265,20 @@ export function OfferComposer({
                   </div>
                 </FieldSet>
               </FieldGroup>
+              {!contacts.filter((c) =>
+                normalize(`${c.name} ${c.company} ${c.email}`).includes(
+                  normalize(query.trim()),
+                ),
+              ).length &&
+                contacts.length > 0 && (
+                  <p
+                    role="status"
+                    className="py-4 text-sm text-muted-foreground"
+                  >
+                    Nenhum contato encontrado. Tente outro nome, empresa ou
+                    e-mail.
+                  </p>
+                )}
               {chosen.map((id) => (
                 <input key={id} type="hidden" name="contacts" value={id} />
               ))}
@@ -286,7 +315,13 @@ export function OfferComposer({
         </div>
       </div>
       <SubmitButton
-        disabled={demo || !chosen.length || chosen.length > 100 || unresolved}
+        className="self-start"
+        disabled={
+          (demo && !onMockSubmit) ||
+          !chosen.length ||
+          chosen.length > 100 ||
+          unresolved
+        }
       >
         Preparar oferta para revisão
       </SubmitButton>

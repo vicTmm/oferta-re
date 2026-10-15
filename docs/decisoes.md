@@ -204,3 +204,7 @@ Enviar/rascunhar e capturar respostas automaticamente pelo Outlook continua depe
 ## 10/10/2026 — Repositório próprio para Oferta Re
 
 A pedido do autor, migrar a branch e os artefatos do produto para `vicTmm/oferta-re`, preservando o histórico. Separar aplicação, Supabase e documentação do coletor Python, que permanece na origem. Manter a branch original como segurança, sem alterar a main da origem. Detalhes em [migração do repositório](migracao-repositorio.md).
+
+## DEC-025 — Preservar acesso existente e adicionar recuperação de senha (11/10/2026)
+
+O autor autorizou concluir a conexão real com Supabase e escolheu usar a conta existente da DEV INFOTECH; informou não lembrar a senha. Preservar usuário, empresa e dados, usando o fluxo oficial de recuperação por e-mail. A senha é definida no aplicativo, sem alteração direta de `auth.users` e sem solicitar credenciais na conversa. Usar URL/chave publicável local e manter o mock independente. A autenticação já existente no MCP autoriza administração técnica, mas não equivale à sessão de usuário no aplicativo.

@@ -51,7 +51,7 @@
 }
 
 :root {
-  --background: #f5f8fd;
+  --background: #fafbfc;
   --foreground: #10182b;
   --card: #ffffff;
   --card-foreground: #10182b;
@@ -72,7 +72,7 @@
   --success: #08734f;
   --success-soft: #e6faf2;
   --brand-cyan: #31bef5;
-  --radius: 0.875rem;
+  --radius: 0.5rem;
   --chart-1: #235ddd;
   --chart-2: #10b981;
   --chart-3: #31bef5;
@@ -142,10 +142,105 @@
 
 /* Superfícies da marca; o conteúdo mantém contraste com texto escuro. */
 .brand-welcome {
-  background: linear-gradient(
-    110deg,
-    var(--card) 5%,
-    var(--secondary) 68%,
-    var(--success-soft) 100%
-  );
+  background: var(--card);
+  border-radius: 0.5rem;
+}
+
+/* Ritmo de leitura e controles consistentes entre as telas. */
+@layer base {
+  select:not([multiple]) {
+    min-width: 0;
+    height: 2.5rem;
+    border-color: var(--input);
+    border-radius: 0.5rem;
+    padding-inline: 0.75rem 2rem;
+    color: var(--foreground);
+    background-color: var(--card);
+    text-overflow: ellipsis;
+  }
+  select:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  input[type="checkbox"],
+  input[type="radio"] {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    accent-color: var(--primary);
+  }
+}
+.workspace-tabs {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+}
+.workspace-tab {
+  flex-shrink: 0;
+  border-bottom: 2px solid transparent;
+  padding-block: 0.875rem;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  transition:
+    color 150ms,
+    border-color 150ms;
+}
+.workspace-tab:hover {
+  color: var(--foreground);
+}
+.workspace-tab[aria-current="page"] {
+  color: var(--primary);
+  border-color: var(--primary);
+  font-weight: 600;
+}
+.workspace-tab:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+.workspace-section {
+  min-width: 0;
+  border-top: 1px solid var(--border);
+  padding-top: 1.5rem;
+}
+.workspace-section form {
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.workspace-section button[type="submit"] {
+  justify-self: start;
+  align-self: start;
+}
+.offer-editor [data-slot="card"] {
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  --tw-ring-shadow: 0 0 #0000;
+}
+.offer-editor [data-slot="card-header"],
+.offer-editor [data-slot="card-content"] {
+  padding-inline: 0;
+}
+.offer-editor [data-slot="card"] + [data-slot="card"] {
+  border-top: 1px solid var(--border);
+}
+.proposal-create {
+  border-block: 1px solid var(--border);
+}
+.proposal-create[open] > summary {
+  margin-bottom: 0.5rem;
+}
+.proposal-create > .workspace-section {
+  border-top: 0;
+  padding: 0 0 1.5rem;
+}
+
+.workspace-section form.grid button[type="submit"] {
+  align-self: end;
+}
+.workspace-section form.flex {
+  align-items: end;
+}
+.workspace-section form.flex.flex-col {
+  align-items: stretch;
 }

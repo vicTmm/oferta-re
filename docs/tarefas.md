@@ -132,3 +132,13 @@ Detalhes: [Empresas e setores](saas-empresas-e-setores.md).
 - [ ] P12: condições estruturadas/quadros por mercado e campos financeiros por versão, conforme exemplos aprovados.
 - [ ] P13: responsável por pessoa, tarefas, aprovações, agenda e notificações entregues.
 - [ ] P14: pacote de auditoria, retenção/restauração, importação autorizada e contratação/cobrança.
+
+## Conexão local e recuperação de acesso — 11/10/2026
+
+- [x] Conectar o checkout ao Supabase existente com chave publicável, preservando conta e empresa.
+- [x] Conferir migrações, RLS, grants, bucket privado e acessos anônimos reais.
+- [x] Restringir execução de helper interno de event trigger e registrar migração correspondente.
+- [x] Adicionar recuperação/redefinição de senha com callback restrito e validação de sessão.
+- [x] Ensaiar proposta, oferta, envio informado, renovação e isolamento no banco hospedado, com rollback integral.
+- [ ] Usuário concluir recuperação por e-mail e login na conta existente.
+- [ ] Validar upload/download reais com sessão autenticada, além das políticas já testadas.

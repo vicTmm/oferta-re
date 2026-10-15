@@ -7,6 +7,8 @@ import {
   List,
   Columns3,
   RefreshCw,
+  Search,
+  X,
 } from "lucide-react";
 import {
   type Proposal,
@@ -18,6 +20,7 @@ import {
   expiringCoverage,
   dateLabel,
 } from "@/lib/proposals";
+import { normalize } from "@/lib/catalog-utils";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -51,9 +54,9 @@ export function ProposalBoard({
         (sector === "general"
           ? !p.department_id
           : p.department_id === sector)) &&
-      `${p.reference} ${p.title} ${p.cedent_name} ${p.insured_name ?? ""} ${p.contract_reference ?? ""}`
-        .toLowerCase()
-        .includes(query.toLowerCase()),
+      normalize(
+        `${p.reference} ${p.title} ${p.cedent_name} ${p.insured_name ?? ""} ${p.contract_reference ?? ""}`,
+      ).includes(normalize(query.trim())),
   );
   const metrics = [
     ["Propostas ativas", proposals.filter((p) => !isClosed(p.stage)).length],
@@ -65,12 +68,12 @@ export function ProposalBoard({
     ],
     ["Prazos vencidos", proposals.filter((p) => isOverdue(p, today)).length],
     [
-      "Renovações com prazo · 30 dias",
+      "Renovações nos próximos 30 dias",
       proposals.filter((p) => upcomingRenewal(p, today)).length,
     ],
   ];
   metrics.push([
-    "Vigências a vencer · 30 dias",
+    "Vigências a vencer em 30 dias",
     proposals.filter((p) => expiringCoverage(p, today)).length,
   ]);
   const card = (p: Proposal) => (
@@ -119,11 +122,14 @@ export function ProposalBoard({
     "h-10 w-full min-w-0 rounded-lg border bg-background px-3 text-sm";
   return (
     <section className="flex min-w-0 flex-col gap-5">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid grid-cols-2 gap-y-5 border-y py-5 sm:grid-cols-3 xl:grid-cols-5">
         {metrics.map(([label, value]) => (
-          <div key={label} className="rounded-xl border bg-card p-5">
+          <div
+            key={label}
+            className="border-l-2 border-border pl-4 first:border-primary"
+          >
             <p className="min-h-8 text-xs text-muted-foreground">{label}</p>
-            <p className="mt-2 text-3xl font-semibold">{value}</p>
+            <p className="mt-2 text-3xl font-semibold tabular-nums">{value}</p>
           </div>
         ))}
       </div>
@@ -156,15 +162,23 @@ export function ProposalBoard({
           </Button>
         </div>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid items-end gap-4 sm:grid-cols-2 xl:grid-cols-[minmax(260px,2fr)_1fr_1fr_1fr]">
         <Field>
           <FieldLabel htmlFor="proposal-search">Buscar proposta</FieldLabel>
-          <Input
-            id="proposal-search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Título, referência ou cedente"
-          />
+          <div className="relative">
+            <Search
+              aria-hidden="true"
+              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+            />
+            <Input
+              id="proposal-search"
+              type="search"
+              className="pl-9"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Título, referência ou cedente"
+            />
+          </div>
         </Field>
         <Field>
           <FieldLabel htmlFor="proposal-kind">Tipo de negócio</FieldLabel>
@@ -216,15 +230,97 @@ export function ProposalBoard({
           </select>
         </Field>
       </div>
-      <p aria-live="polite" className="text-xs text-muted-foreground">
-        {shown.length} de {proposals.length} propostas · informações
-        compartilhadas na empresa
-      </p>
+      <div className="flex items-center justify-between gap-3">
+        <p aria-live="polite" className="text-xs text-muted-foreground">
+          {shown.length} de {proposals.length} propostas
+        </p>
+        {(query || kind || stage || sector) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setQuery("");
+              setKind("");
+              setStage("");
+              setSector("");
+            }}
+          >
+            <X className="size-3.5" />
+            Limpar filtros
+          </Button>
+        )}
+      </div>
       {view === "list" ? (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {shown.map((p) => (
-            <div key={p.id}>{card(p)}</div>
-          ))}
+        <div className="overflow-hidden border-y">
+          <div
+            className="hidden grid-cols-[minmax(0,2fr)_1fr_1fr_110px_24px] gap-5 border-b px-3 py-3 text-xs font-medium text-muted-foreground lg:grid"
+            aria-hidden="true"
+          >
+            <span>Proposta / cedente</span>
+            <span>Setor / tipo</span>
+            <span>Etapa</span>
+            <span>Prazo</span>
+            <span />
+          </div>
+          <div className="divide-y">
+            {shown.map((p) => (
+              <Link
+                key={p.id}
+                href={
+                  demo
+                    ? `/demonstracao/propostas/${p.id}`
+                    : `/workspace/propostas/${p.id}?org=${org}`
+                }
+                className="group grid gap-3 px-3 py-5 transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring lg:grid-cols-[minmax(0,2fr)_1fr_1fr_110px_24px] lg:items-center lg:gap-5"
+              >
+                <div className="min-w-0">
+                  <p className="font-medium group-hover:text-primary">
+                    {p.title}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {p.reference} · {p.cedent_name}
+                  </p>
+                  {p.next_action && (
+                    <p className="mt-2 line-clamp-1 text-xs text-muted-foreground">
+                      {p.next_action}
+                    </p>
+                  )}
+                </div>
+                <div className="text-sm">
+                  <p>
+                    {departments.find((d) => d.id === p.department_id)?.name ??
+                      "Sem setor"}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {businessKinds[p.business_kind]}
+                  </p>
+                </div>
+                <div>
+                  <Badge
+                    variant={p.stage === "placed" ? "success" : "secondary"}
+                  >
+                    {proposalStages[p.stage]}
+                  </Badge>
+                </div>
+                <div
+                  className={
+                    isOverdue(p, today)
+                      ? "text-sm text-destructive"
+                      : "text-sm text-muted-foreground"
+                  }
+                >
+                  {p.due_date ? dateLabel(p.due_date) : "Sem prazo"}
+                  {isOverdue(p, today) && (
+                    <p className="mt-1 text-xs">Vencido</p>
+                  )}
+                </div>
+                <ArrowRight
+                  aria-hidden="true"
+                  className="hidden size-4 text-muted-foreground group-hover:text-primary lg:block"
+                />
+              </Link>
+            ))}
+          </div>
         </div>
       ) : (
         <div

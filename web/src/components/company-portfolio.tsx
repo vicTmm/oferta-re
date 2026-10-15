@@ -23,7 +23,7 @@ export async function CompanyPortfolio({
   const today = brazilToday();
   return (
     <section className="flex flex-col gap-4">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-y-5 border-y py-5 sm:grid-cols-2 lg:grid-cols-4">
         {[
           [
             "Propostas ativas",
@@ -44,7 +44,7 @@ export async function CompanyPortfolio({
             proposals.filter((p) => isOverdue(p, today)).length,
           ],
         ].map(([label, total]) => (
-          <div key={label} className="rounded-xl border p-4">
+          <div key={label} className="border-l-2 pl-4 first:border-primary">
             <p className="text-xs text-muted-foreground">{label}</p>
             <p className="mt-2 text-2xl font-semibold">{total}</p>
           </div>
