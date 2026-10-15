@@ -1,0 +1,494 @@
+{
+  "researchMode": "gemini-3.8-flash-web-search",
+  "generatedAt": "2026-10-15T20:32:00-03:00",
+  "summary": "Revisão e aprofundamento das lacunas funcionais do Oferta Re para atuação como portal de corretoras de resseguro no Brasil. O modo oficial Deep Research não está presente entre os agentes/ferramentas do runtime; a pesquisa foi realizada via inspeção detalhada do código-fonte local e busca web direta em fontes primárias verificáveis. O relatório corrige premissas sobre backups (destacando a separação entre banco e Storage no Supabase e a compatibilidade do plano Free sem PITR obrigatório), remove percentuais fixos automáticos sobre oferta preferencial da SUSEP, inclui lacunas críticas P0 de revogação de membros aceitos (GAP-13) e homologação ponta a ponta de Auth/Storage em produção (GAP-14), estrutura 14 lacunas com riscos explícitos e apresenta um roadmap realista de 30/60/90 dias com corte de escopo.",
+  "sources": [
+    {
+      "id": "SRC-MSGRAPH-DELTA",
+      "title": "Microsoft Graph REST API v1.0 - Get incremental changes to messages in a folder (delta query)",
+      "url": "https://learn.microsoft.com/en-us/graph/api/message-delta?view=graph-rest-1.0",
+      "accessedAt": "2026-10-15",
+      "notes": "Verificada resposta HTTP 200. Documenta consultas delta incrementais, paginação e tokens deltaLink."
+    },
+    {
+      "id": "SRC-MSGRAPH-IMMUTABLE",
+      "title": "Microsoft Graph Documentation - Enable immutable IDs in Outlook mail items",
+      "url": "https://learn.microsoft.com/en-us/graph/outlook-immutable-id",
+      "accessedAt": "2026-10-15",
+      "notes": "Verificada resposta HTTP 200. Documenta cabeçalho Prefer: IdType=\"ImmutableId\" para preservação de IDs estáveis ao mover e-mails."
+    },
+    {
+      "id": "SRC-MSGRAPH-MIME",
+      "title": "Microsoft Graph Documentation - Get MIME content of an Outlook message ($value)",
+      "url": "https://learn.microsoft.com/en-us/graph/outlook-get-mime-message",
+      "accessedAt": "2026-10-15",
+      "notes": "Verificada resposta HTTP 200. Documenta extração do stream binário RFC 822 via segmento de caminho /$value."
+    },
+    {
+      "id": "SRC-LLOYDS-CDR",
+      "title": "Lloyd's Market Resources - Core Data Record (CDR) & Blueprint Two Placing Standards",
+      "url": "https://www.lloyds.com/market-resources/requirements-and-standards/core-data-record",
+      "accessedAt": "2026-10-15",
+      "notes": "Fonte oficial sobre atributos de dados de colocação de risco e contrato padronizados no mercado internacional."
+    },
+    {
+      "id": "SRC-PPL-LONDON",
+      "title": "Placing Platform Limited (PPL) - Electronic Placing Platform Benchmark",
+      "url": "https://www.ppl-london.com/",
+      "accessedAt": "2026-10-15",
+      "notes": "Verificada resposta HTTP 200 em requisições GET. Utilizada estritamente como benchmark internacional de subscrição eletrônica, não como exigência para o Brasil."
+    },
+    {
+      "id": "SRC-SUSEP-CONSOLIDADA",
+      "title": "SUSEP - Supervisão Prudencial e Regulação de Resseguro (Resolução CNSP 451/2022 e Circular 683/2022)",
+      "url": "https://www.gov.br/susep/pt-br/assuntos/informacoes-ao-mercado/solvencia-supervisao-prudencial/supervisao-consolidada-cgcon",
+      "accessedAt": "2026-10-15",
+      "notes": "Verificada resposta HTTP 200. Canal temático oficial de supervisão e regulação de resseguro da autarquia."
+    },
+    {
+      "id": "SRC-SUSEP-CIRCULAR-605",
+      "title": "SUSEP - Circular nº 605/2020 (Regras para a guarda e preservação de documentos e registros)",
+      "url": "https://www2.susep.gov.br/safe/scripts/bnweb/bnmapi.exe?router=upload%2F22297",
+      "accessedAt": "2026-10-15",
+      "notes": "Verificada resposta HTTP 200. Texto original oficial sobre prazos gerais de guarda de documentos para supervisionadas e intermediários."
+    },
+    {
+      "id": "SRC-SUPABASE-BACKUPS",
+      "title": "Supabase Platform Documentation - Database Backups, Storage Separation and Point-in-Time Recovery",
+      "url": "https://supabase.com/docs/guides/platform/backups",
+      "accessedAt": "2026-10-15",
+      "notes": "Verificada resposta HTTP 200. Documenta que backups do banco não incluem Storage e que PITR é add-on pago (planos Pro, Team ou Enterprise); projetos Free precisam manter suas próprias exportações e cópias off-site."
+    },
+    {
+      "id": "SRC-ACORD-GRLC",
+      "title": "ACORD Standards - Global Reinsurance & Large Commercial (GRLC)",
+      "url": "https://www.acord.org/standards-architecture/acord-data-standards",
+      "accessedAt": "2026-10-15",
+      "notes": "Página sujeita a bloqueio 403 em consultas automatizadas sem navegador completo; referenciada com base em documentação técnica e padrões públicos de colocação."
+    }
+  ],
+  "top5": [
+    "GAP-12",
+    "GAP-13",
+    "GAP-14",
+    "GAP-01",
+    "GAP-02"
+  ],
+  "gaps": [
+    {
+      "id": "GAP-01",
+      "title": "Quadro de Colocação Multimercado e Rateio de Linhas (Written vs Signed Lines)",
+      "category": "reinsurance_placement",
+      "status": "ausente",
+      "priority": "P1",
+      "effort": "L",
+      "problem": "Em operações facultativas e contratos de resseguro, o risco é frequentemente sindicado entre múltiplas resseguradoras até atingir 100% da capacidade cedida. Atualmente o portal trata destinatários apenas como contatos de e-mail isolados, sem registrar a linha escrita (written line %) por mercado, calcular sobrecolocação (> 100%) nem aplicar rateio proporcional (sign-down) para apurar a linha assinada final (signed line %).",
+      "evidence": "web/src/components/proposal-detail.tsx#L282-L377 exibe cartões avulsos de destinatários sem nenhum somatório ou percentual de capacidade; supabase/migrations/20261009030000_proposal_portal.sql#L106-L107 insere registros em offer_recipients contendo apenas identificadores de contato sem quotas numéricas.",
+      "basis": "Constatação local direta no código da interface e do banco. A referência a written/signed lines baseia-se em práticas consolidadas de mercado (Lloyd's CDR e PPL) aplicáveis à distribuição de capacidade sindicada.",
+      "risks": "Complexidade matemática em regras de arredondamento de quotas decimais no sign-down e tratamento de exigências de participação mínima por subscritor.",
+      "sourceIds": [
+        "SRC-LLOYDS-CDR",
+        "SRC-PPL-LONDON"
+      ],
+      "acceptanceCriteria": [
+        "Tabela de consolidação de colocação sindicada na visualização da proposta",
+        "Campos numéricos para Cota Ofertada (%), Linha Escrita (%) e Linha Assinada (%)",
+        "Totalizador de capacidade colocada com alerta visual para subcolocação (< 100%) e sobrecolocação (> 100%)",
+        "Ação de rateio proporcional (pro-rata sign-down) com opção de ajuste manual pelo corretor",
+        "Identificação explícita do papel de cada ressegurador na operação (Líder vs Seguidor)"
+      ],
+      "dependencies": [
+        "GAP-02"
+      ]
+    },
+    {
+      "id": "GAP-02",
+      "title": "Condições Técnicas e Financeiras Estruturadas da Oferta (Slip Estruturado)",
+      "category": "reinsurance_terms",
+      "status": "incompleto",
+      "priority": "P1",
+      "effort": "M",
+      "problem": "Condições essenciais de subscrição de resseguro precisam ser estruturadas e comparáveis entre versões. Atualmente, o portal armazena as condições operacionais em um texto livre no corpo da mensagem. Faltam atributos fundamentais: Limite Máximo de Garantia (LMG) / Limite Máximo de Indenização (LMI), retenção da seguradora cedente, comissão de corretagem (brokerage commission %), prêmio de resseguro (taxa % ou prêmio mínimo de depósito - MDP), moeda e franquias / Participação Obrigatória do Segurado (POS).",
+      "evidence": "supabase/migrations/20261008225654_oferta_re_foundation.sql#L231 possui a coluna terms jsonb default '{}' na tabela offer_versions, porém o campo permanece inativo no frontend; web/src/app/workspace/flows.ts#L105-L108 e web/src/components/offer-composer.tsx manipulam apenas subject, body e signature como texto livre.",
+      "basis": "Constatação direta no esquema PostgreSQL e nos formulários React. A estrutura de campos alinha-se ao Core Data Record (CDR) do Lloyd's.",
+      "risks": "Sobrecarga de preenchimento para o corretor se a interface exigir excesso de campos técnicos nas fases iniciais de sondagem de mercado.",
+      "sourceIds": [
+        "SRC-LLOYDS-CDR",
+        "SRC-ACORD-GRLC"
+      ],
+      "acceptanceCriteria": [
+        "Esquema tipado para termos técnicos com validação em Zod e JSON Schema",
+        "Campos para Moeda (BRL, USD, EUR), LMG, Retenção da Cedente, Comissão de Corretagem (%) e Prêmio/Taxa",
+        "Painel comparativo lado a lado entre versões da oferta destacando atributos alterados entre V1 e V2",
+        "Injeção automática desses atributos em variáveis de modelo de e-mail e relatórios"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "GAP-03",
+      "title": "Gestão de Evidências e Consulta Preferencial a Resseguradores Locais",
+      "category": "regulatory_compliance",
+      "status": "ausente",
+      "priority": "P2",
+      "effort": "M",
+      "problem": "A legislação brasileira estabelece direito de preferência de contratação a resseguradores locais (art. 5º da Resolução CNSP nº 451/2022 e Lei Complementar nº 126/2007). Para que uma operação justifique a colocação de excedente com resseguradores admitidos ou eventuais no exterior por insuficiência de capacidade local, é praxe reunir comprovação formal de consultas e respectivas recusas (ou decurso de prazo sem resposta). O portal categoriza resseguradoras na base SUSEP, mas não oferece fluxo para catalogar essas consultas ou consolidar as evidências de recusa.",
+      "evidence": "supabase/migrations/20261008225654_oferta_re_foundation.sql#L26 extrai a categoria da SUSEP (local, admitida, eventual), mas supabase/migrations/20261009030000_proposal_portal.sql#L87-L110 não vincula regras de conferência ou emissão de dossiê de consultas aos contatos selecionados.",
+      "basis": "Constatação local de ausência de relatórios ou indicadores de consulta a locais. A necessidade decorre da regulação prudencial da SUSEP, mas não deve constituir regra cega de 40% automática nem bloqueio rígido de MVP, exigindo validação jurídica das exceções aplicáveis.",
+      "risks": "Interpretações jurídicas divergentes sobre ramos dispensados ou novas regras oriundas do Marco Legal de Seguros (Resolução CNSP nº 494/2026); risco de falsos bloqueios se a lógica for inflexível.",
+      "sourceIds": [
+        "SRC-SUSEP-CONSOLIDADA"
+      ],
+      "acceptanceCriteria": [
+        "Quadro informativo exibindo a distribuição de resseguradores consultados por categoria SUSEP (local, admitida, eventual)",
+        "Registro estruturado da resposta de recusa formal ou ausência de retorno tempestivo para resseguradores locais consultados",
+        "Geração de relatório documental consolidando as consultas e recusas para compor o processo de colocação perante a cedente",
+        "Parametrização configurável de regras de alerta, sem bloqueio mandatório do envio, com aviso de suporte operacional sem caráter de parecer jurídico"
+      ],
+      "dependencies": [
+        "GAP-01",
+        "GAP-02"
+      ]
+    },
+    {
+      "id": "GAP-04",
+      "title": "Sincronização Microsoft Graph com Delta Query e Identificadores Imutáveis",
+      "category": "email_integration",
+      "status": "incompleto",
+      "priority": "P1",
+      "effort": "L",
+      "problem": "A conexão com a caixa individual Microsoft 365 do corretor permanece no plano teórico. O código possui um módulo puramente utilitário de correlação de cabeçalhos RFC em memória, mas não há tabelas de conexões OAuth, tokens de atualização persistidos, serviço de background para consumo incremental via delta query (/messages/delta) ou uso do cabeçalho de IDs imutáveis (Prefer: IdType=\"ImmutableId\"). O corretor ainda confirma o envio marcando um checkbox manual no sistema.",
+      "evidence": "web/src/lib/email-tracking.ts#L1-L74 é uma função pura sem chamadas de rede; web/src/components/proposal-detail.tsx#L343-L372 implementa o envio como um formulário HTML com checkbox 'Conferi e enviei pelo Outlook'; inexistem tabelas de OAuth e cursores de delta nas migrações.",
+      "basis": "Constatação direta no código e histórico de migrações. Especificação técnica fundamentada na documentação oficial de mensagens do Microsoft Graph.",
+      "risks": "Políticas de TI corporativas restringindo consentimento de administrador no Microsoft Entra ID para o escopo delegado Mail.Read.",
+      "sourceIds": [
+        "SRC-MSGRAPH-DELTA",
+        "SRC-MSGRAPH-IMMUTABLE"
+      ],
+      "acceptanceCriteria": [
+        "Tabelas no PostgreSQL para armazenar conexões OAuth por organização e usuário com tokens criptografados no servidor",
+        "Rotina de sincronização incremental chamando /me/mailFolders/{id}/messages/delta com cabeçalho Prefer: IdType=\"ImmutableId\"",
+        "Persistência e atualização atômica de cursores deltaLink por pasta acompanhada (Itens Enviados e Caixa de Entrada)",
+        "Deduplicação de mensagens capturadas baseada na chave composta (conexão, immutableId, internetMessageId)"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "GAP-05",
+      "title": "Captura e Validação de Conteúdo MIME (.eml) no Servidor com Checksum Criptográfico",
+      "category": "audit_and_evidence",
+      "status": "incompleto",
+      "priority": "P1",
+      "effort": "M",
+      "problem": "Para comprovação técnica perante seguradoras cedentes e auditorias, a evidência autêntica da resposta do mercado é a mensagem MIME RFC 822 integral (.eml), com cabeçalhos SMTP preservados e carimbos de data/hora dos servidores. No momento, o upload é manual pelo navegador e o SHA-256 é calculado pelo JavaScript client-side sem verificação independente dos bytes gravados pelo servidor no Storage.",
+      "evidence": "web/src/app/workspace/flows.ts#L153 recebe o hash via FormData calculado no cliente; docs/rastreio-outlook-e-respostas.md#L21 documenta expressamente a necessidade de o pipeline calcular e verificar no servidor os bytes recuperados antes de concluir o arquivamento.",
+      "basis": "Constatação direta no código de flows.ts e nos registros arquiteturais de decisoes.md.",
+      "risks": "Mensagens com anexos de engenharia muito extensos excedendo limites de tamanho de requisição ou quotas de armazenamento.",
+      "sourceIds": [
+        "SRC-MSGRAPH-MIME",
+        "SRC-SUSEP-CIRCULAR-605"
+      ],
+      "acceptanceCriteria": [
+        "Pipeline no backend que recupera o stream binário MIME via GET /me/messages/{id}/$value do Microsoft Graph",
+        "Cálculo obrigatório de hash SHA-256 em stream no servidor antes da gravação definitiva no bucket privado operation-documents",
+        "Rejeição de registro de resposta caso ocorra divergência de hash ou falha de integridade na transferência",
+        "Preservação da imutabilidade dos objetos de evidência após a gravação inicial"
+      ],
+      "dependencies": [
+        "GAP-04"
+      ]
+    },
+    {
+      "id": "GAP-06",
+      "title": "Exportação Consolidada de Dossiê de Auditoria e Colocação (Compliance Package)",
+      "category": "compliance_and_reporting",
+      "status": "ausente",
+      "priority": "P1",
+      "effort": "M",
+      "problem": "Em caso de sinistro vultoso, inspeção regulatória da SUSEP ou auditoria da cedente, a corretora precisa apresentar o histórico integral da colocação de forma ágil e fidedigna. Atualmente, os arquivos de comprovação e eventos só podem ser acessados ou baixados de forma individual e manual na interface, exigindo esforço moroso de reunião de documentos avulsos.",
+      "evidence": "web/src/app/workspace/comprovantes/page.tsx e web/src/app/workspace/arquivos/[id]/route.ts oferecem unicamente download unitário de documentos; inexiste rota ou função para empacotamento consolidado de operações.",
+      "basis": "Constatação direta na ausência de rotas de exportação em lote no código. Necessidade fundamentada nas diretrizes de disponibilidade documental da Circular SUSEP nº 605/2020.",
+      "risks": "Consumo de memória e timeout no servidor Vercel ao compactar múltiplos anexos pesados; requer geração assíncrona com link temporário assinado.",
+      "sourceIds": [
+        "SRC-SUSEP-CIRCULAR-605",
+        "SRC-LLOYDS-CDR"
+      ],
+      "acceptanceCriteria": [
+        "Ação autenticada 'Exportar Dossiê de Auditoria' na página da proposta colocada ou encerrada",
+        "Geração de arquivo .zip estruturado contendo: (a) Manifesto do processo em PDF e JSON com índice dos itens, (b) Linha do tempo completa de proposal_events, (c) Versões da oferta com termos técnicos, (d) Arquivos .eml originais e anexos acompanhados de tabela de hashes SHA-256",
+        "Registro de evento em audit_events a cada solicitação de exportação de dossiê"
+      ],
+      "dependencies": [
+        "GAP-05"
+      ]
+    },
+    {
+      "id": "GAP-07",
+      "title": "Gestão Operacional de Tarefas Individuais e Acompanhamento de SLAs",
+      "category": "task_and_sla_management",
+      "status": "incompleto",
+      "priority": "P1",
+      "effort": "M",
+      "problem": "Negócios de resseguro e renovações possuem cronogramas rígidos com etapas sucessivas (coleta de dados, elaboração de slip, cotação com líder, distribuição e fechamento). Atualmente, a proposta conta apenas com datas globais due_date e texto livre next_action vinculados a setor. Não é possível delegar o processo a um corretor responsável individual (assigned_to_user_id), nem existem sub-tarefas com checklists ou alertas proativos de proximidade de vencimento.",
+      "evidence": "supabase/migrations/20261009030000_proposal_portal.sql#L10-L11 adiciona apenas due_date date e next_action text na tabela operations; README.md#L9 e docs/portal-propostas-e-renovacoes.md#L61 registram: 'Não existem lembretes automáticos ativos'.",
+      "basis": "Constatação direta no esquema do banco e na documentação do produto.",
+      "risks": "Fadiga de alertas na equipe caso os avisos de vencimento sejam excessivos ou mal calibrados.",
+      "sourceIds": [
+        "SRC-LLOYDS-CDR"
+      ],
+      "acceptanceCriteria": [
+        "Campo assigned_to_user_id na tabela operations com chave estrangeira para organization_members",
+        "Checklist de sub-tarefas operacionais vinculável por proposta (ex: solicitar dados à cedente, consultar líder, coletar assinaturas)",
+        "Monitoramento de SLA com alertas visuais de proximidade de vencimento (D-15, D-7, D-1 e vencido)",
+        "Disparo de notificações por e-mail ou in-app aos responsáveis individuais conforme o calendário se aproxima do prazo"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "GAP-08",
+      "title": "Importação e Validação em Lote de Contatos e Mercados (CSV/XLSX)",
+      "category": "data_management",
+      "status": "ausente",
+      "priority": "P1",
+      "effort": "S",
+      "problem": "Corretoras gerenciam carteiras com centenas de subscritores e contatos técnicos em planilhas externas. O cadastro manual contato por contato pelo formulário web inviabiliza a implantação ágil em novos clientes. A tarefa E3-02 do projeto está documentada há meses como pendente.",
+      "evidence": "docs/tarefas.md#L32 documenta '- [ ] E3-02: importar XLSX/CSV com prévia, mapeamento, duplicatas e confirmação'; web/src/app/workspace/contatos/page.tsx possui apenas formulário de inserção unitária via flows.ts#saveContact.",
+      "basis": "Constatação direta da pendência na documentação técnica e ausência de código de upload em lote.",
+      "risks": "Formatos divergentes de planilhas fornecidas pelos clientes contendo e-mails com erro sintático ou nomes de resseguradoras divergentes da base SUSEP.",
+      "sourceIds": [
+        "SRC-ACORD-GRLC"
+      ],
+      "acceptanceCriteria": [
+        "Interface de upload de arquivos CSV e XLSX na área de contatos",
+        "Mapeamento interativo de colunas com detecção inteligente de cabeçalhos padrão",
+        "Etapa de pré-visualização destacando duplicatas, e-mails inválidos e resseguradoras não localizadas no cadastro oficial da SUSEP",
+        "Importação atômica em transação com rollback seguro em caso de inconsistência crítica"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "GAP-09",
+      "title": "Gestão de Cláusulas Especiais, Condições Precedentes e Subjectivities",
+      "category": "reinsurance_terms",
+      "status": "ausente",
+      "priority": "P2",
+      "effort": "M",
+      "problem": "É rotina no mercado de resseguro que resseguradores condicionem sua aceitação a 'subjectivities' (cláusulas suspensivas ou condicionantes de cobertura, ex: 'sujeito a cláusula de guerra LMA4000', 'sujeito a inspeção física satisfatória em 30 dias'). O corretor precisa acompanhar se essas condições foram formalmente atendidas antes do início de vigência. Hoje o sistema permite apenas uma anotação de texto livre na resposta.",
+      "evidence": "web/src/components/proposal-detail.tsx#L328-L332 exibe apenas a string note gravada na tabela responses; inexiste entidade relacional para acompanhamento de cláusulas condicionais.",
+      "basis": "Constatação direta da limitação de modelo no código. Prática alinhada ao padrão de subjectivities do Core Data Record e MRC v3.",
+      "risks": "Burocratização excessiva caso se exija estruturação formal de anotações triviais de negociação; deve haver classificação de severidade da condição.",
+      "sourceIds": [
+        "SRC-LLOYDS-CDR"
+      ],
+      "acceptanceCriteria": [
+        "Entidade proposal_subjectivities associando a condição à proposta e ao ressegurador participante",
+        "Campos para descrição da condição, prazo limite de atendimento (antes do início ou prazo específico) e status (pendente, atendida, dispensada)",
+        "Possibilidade de anexar documento comprobatório de cumprimento da condição",
+        "Alerta de atenção na proposta ao marcar como 'Colocada' enquanto houver subjectivities pendentes"
+      ],
+      "dependencies": [
+        "GAP-01",
+        "GAP-02"
+      ]
+    },
+    {
+      "id": "GAP-10",
+      "title": "Geração Automatizada de Nota de Cobertura (Cover Note) e Closing Slip",
+      "category": "contract_documentation",
+      "status": "ausente",
+      "priority": "P2",
+      "effort": "M",
+      "problem": "Após o encerramento da colocação (etapa Colocada), a corretora é responsável pela emissão formal da Nota de Cobertura de Resseguro (Cover Note) para a seguradora cedente e dos closing slips para os resseguradores participantes, resumindo os termos finais e participações assinadas. Atualmente não há gerador de documentos no sistema, exigindo redação manual externa no Word.",
+      "evidence": "web/src/components/proposal-detail.tsx#L122-L130 disponibiliza apenas a ação 'Iniciar renovação'; inexistem templates de documentos ou utilitários de geração PDF no repositório.",
+      "basis": "Constatação direta da ausência de componentes geradores de documentos contratuais no código.",
+      "risks": "Exigências de layout e cláusulas específicas variando de acordo com as diretrizes de cada seguradora cedente.",
+      "sourceIds": [
+        "SRC-LLOYDS-CDR"
+      ],
+      "acceptanceCriteria": [
+        "Ação de geração de minuta da Nota de Cobertura e Closing Slip na proposta colocada",
+        "Renderização em formato PDF padronizado contendo: dados das partes, termos técnicos vigentes, quadro de resseguradores com percentuais assinados e lista de comprovantes vinculados",
+        "Armazenamento da minuta gerada no bucket de documentos da proposta com hash SHA-256 e versão associada"
+      ],
+      "dependencies": [
+        "GAP-01",
+        "GAP-02"
+      ]
+    },
+    {
+      "id": "GAP-11",
+      "title": "Suporte Especializado a Estruturas de Tratados de Resseguro (Treaty em Camadas)",
+      "category": "treaty_reinsurance",
+      "status": "ausente",
+      "priority": "P2",
+      "effort": "L",
+      "problem": "Embora a aplicação possua setores cadastrados como 'Treaty', o modelo de dados de propostas é quase inteiramente concebido para riscos facultativos individuais (como comprovam campos como insured_name e contract_reference). Em contratos de tratados (automáticos), a lógica opera por modalidades (Proporcional: Quota-Parte, Excedente de Responsabilidade; Não Proporcional: Excesso de Danos / XL por Risco ou Catástrofe), divisão em camadas (layers), prioridades/retenções e regras de reconstituição de cobertura.",
+      "evidence": "supabase/migrations/20261009030000_proposal_portal.sql#L3-L18 e web/src/lib/proposals.ts#L4-L10 suportam apenas atributos planos de negócio sem modelo para camadas ou múltiplos ramos de tratados.",
+      "basis": "Constatação direta da modelagem relacional plana no banco.",
+      "risks": "Alta complexidade conceitual; deve ser abordado inicialmente com foco em contratos de Excesso de Danos (XL).",
+      "sourceIds": [
+        "SRC-ACORD-GRLC"
+      ],
+      "acceptanceCriteria": [
+        "Opção de classificação da proposta entre Facultativo, Tratado Proporcional e Tratado Não Proporcional",
+        "Configuração de camadas (layers) com campos para Prioridade/Retenção e Limite da Camada",
+        "Quadro de colocação adaptado para permitir preenchimento de participações por camada independente",
+        "Registro de cláusulas de reconstituição (reinstatements) e taxas associadas"
+      ],
+      "dependencies": [
+        "GAP-01",
+        "GAP-02"
+      ]
+    },
+    {
+      "id": "GAP-12",
+      "title": "Procedimento Operacional de Backup, Restauração e Resiliência de Dados",
+      "category": "saas_reliability",
+      "status": "incompleto",
+      "priority": "P0",
+      "effort": "M",
+      "problem": "A documentação técnica do Oferta Re (docs/tarefas.md, item E2-04b) registra como pendente a validação de 'ensaio de backup/restauração'. A documentação oficial do Supabase esclarece que os backups do banco de dados NÃO incluem os objetos de arquivos armazenados no Storage (buckets S3-compatíveis); além disso, o recurso Point-in-Time Recovery (PITR) é um add-on pago (planos Pro, Team ou Enterprise) e projetos Free precisam manter suas próprias exportações e cópias off-site. Antes de receber dados reais de clientes em um piloto, o projeto precisa de um procedimento operacional padronizado de restauração com cópias separadas do banco e dos arquivos do Storage, garantindo RPO e RTO praticáveis no plano gratuito. Diretrizes de guarda documental e expurgo seguro pós-prazo dependem de análise jurídica específica sobre prazos prescricionais e causas de interrupção, não devendo adotar regra cega de expurgo.",
+      "evidence": "docs/tarefas.md#L26 registra '- [ ] E2-04b: upload/download hospedado e ensaio de backup/restauração'; inexistem scripts ou rotinas documentadas de simulação de restauração do banco e Storage no repositório.",
+      "basis": "Constatação direta da pendência no diário técnico combinada à documentação oficial da arquitetura de backups do Supabase.",
+      "risks": "Perda de dados em caso de incidente ou exclusão inadvertida; assincronia entre referências relacionais no banco e arquivos preservados no Storage.",
+      "sourceIds": [
+        "SRC-SUPABASE-BACKUPS",
+        "SRC-SUSEP-CIRCULAR-605"
+      ],
+      "acceptanceCriteria": [
+        "Procedimento Operacional Padrão (POP) documentado e ensaiado de restauração lógica do banco (via pg_dump) e restauração dos arquivos do Storage em ambiente isolado",
+        "Definição de metas acordadas de RPO (ex: 24 horas via backup diário) e RTO (ex: 4 horas para restauração básica) compatíveis com o plano Free do Supabase",
+        "Script automatizado de checagem de consistência comparando os hashes SHA-256 da tabela documents com os arquivos reais no bucket operation-documents",
+        "Ressalva de que prazos de retenção e eventual descarte de documentos dependem de diretrizes jurídicas e hipóteses legais de suspensão prescricional"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "GAP-13",
+      "title": "Revogação de Acesso de Membros Aceitos e Alteração Auditada de Papéis",
+      "category": "user_management_and_governance",
+      "status": "ausente",
+      "priority": "P0",
+      "effort": "S",
+      "problem": "O módulo de equipe atual permite apenas criar convites e revogar convites pendentes. Uma vez que o usuário aceita o convite e se torna membro da organização, a interface e as Server Actions não oferecem nenhuma função para revogar o acesso do membro (remover de organization_members) ou alterar seu papel (role: admin, member, viewer). Em uma corretora, quando um funcionário é desligado ou muda de função, o administrador fica impossibilitado de revogar suas credenciais pela aplicação, criando grave risco de vazamento de informações confidenciais. Essa funcionalidade deve manter o compartilhamento interno da empresa (DEC-020), sem isolamento artificial de setores.",
+      "evidence": "web/src/app/workspace/equipe/actions.ts#L77-L86 implementa apenas revokeInvitation para convites pendentes; docs/tarefas.md#L87 explicita a pendência: '- [ ] Implementar revogação de acesso de membros aceitos e alteração auditada de papéis'.",
+      "basis": "Constatação local direta na ausência de Server Actions de remoção de membros em equipe/actions.ts e na pendência formal registrada em docs/tarefas.md.",
+      "risks": "Usuário desvinculado da empresa permanecer com acesso de leitura ou escrita a propostas e termos confidenciais da corretora.",
+      "sourceIds": [],
+      "acceptanceCriteria": [
+        "Server Action e botão na interface para revogação de acesso de membros aceitos em organization_members por administradores ou proprietário",
+        "Server Action para atualização de papel (role) de membro com restrição hierárquica (apenas owner pode promover/rebaixar admin)",
+        "Impossibilidade de o proprietário (owner) revogar a si próprio sem transferir a titularidade da empresa",
+        "Gravação obrigatória de evento em audit_events registrando quem alterou o papel ou revogou o acesso do membro",
+        "Preservação do compartilhamento interno de propostas e modelos entre os setores da mesma corretora (DEC-020)"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "GAP-14",
+      "title": "Homologação Ponta a Ponta de Auth e Storage em Ambiente Hospedado",
+      "category": "production_readiness",
+      "status": "nao_homologado",
+      "priority": "P0",
+      "effort": "M",
+      "problem": "Embora a suíte de 38 testes locais automatizados em Node.js (scripts/*.test.mjs) passe com sucesso no PostgreSQL em memória (PGlite), os testes locais não simulam o tráfego HTTP real de navegadores, o comportamento de cookies de sessão em domínios de produção, a comunicação direta com a API do Supabase Storage ou o isolamento de sessões com duas contas reais operando em organizações diferentes. O autor confirmou a recuperação de senha e o login na conversa, comprovando que o Auth está funcional; contudo, a homologação de ponta a ponta com arquivos reais, uploads, downloads, reenvios e quotas de rede em ambiente hospedado (Vercel/Supabase) segue como pendência crítica antes da abertura para pilotos reais.",
+      "evidence": "docs/tarefas.md#L22 documenta '- [ ] E2-02b: validar duas contas reais, confirmação de e-mail e sessões no domínio de produção'; docs/tarefas.md#L26 e L144 documentam a pendência de homologação de upload/download reais em ambiente hospedado; scripts/database.test.mjs roda localmente sobre PGlite.",
+      "basis": "Constatação direta nas tarefas pendentes do diário e na separação técnica entre testes de unidade em PGlite e homologação em infraestrutura de nuvem.",
+      "risks": "Erros de CORS, incompatibilidade de cabeçalhos de cookies em navegadores móveis, ou limites de payload da Vercel na autorização de arquivos reais.",
+      "sourceIds": [],
+      "acceptanceCriteria": [
+        "Homologação comprovada de duas contas de usuários distintas autenticadas em organizações separadas no ambiente hospedado",
+        "Teste real de upload, download e reenvio de arquivo no bucket privado operation-documents com validação de sessão e RLS",
+        "Validação de fluxo de redefinição de senha e recuperação de acesso diretamente pela interface web em produção",
+        "Monitoramento básico de erros de servidor e alertas operacionais configurados para o ambiente hospedado"
+      ],
+      "dependencies": []
+    }
+  ],
+  "roadmap": {
+    "fase1_30dias": {
+      "titulo": "Fase 1 (0 a 30 dias): Confiabilidade Operacional, Segurança e Fundação do Piloto",
+      "descricao": "Corte de escopo focado em eliminar riscos impeditivos de segurança e resiliência (P0) e introduzir o primeiro corte funcional de subscrição estruturada antes de admitir dados reais de clientes.",
+      "gaps": [
+        "GAP-12",
+        "GAP-13",
+        "GAP-14",
+        "GAP-02",
+        "GAP-08"
+      ],
+      "marcos": [
+        "Procedimento Operacional Padrão (POP) de backup e simulação de restauração com cópias off-site compatíveis com plano Free do Supabase (GAP-12)",
+        "Revogação funcional de membros aceitos e alteração auditada de papéis na gestão de equipe (GAP-13)",
+        "Homologação ponta a ponta de Auth e Storage em ambiente hospedado com duas contas reais em organizações distintas (GAP-14)",
+        "Primeiro slice de termos financeiros estruturados no slip: LMG, retenção, moeda e prêmio (GAP-02)",
+        "Importador de contatos em lote via planilha CSV/XLSX com validação na base SUSEP (GAP-08)"
+      ],
+      "estimativa": "Estimativa hipotética baseada em alocação de 1 desenvolvedor fullstack; escopo redimensionado para 2 módulos P0 de pequeno/médio porte e 1 slice estruturado, evitando sobrecarga."
+    },
+    "fase2_60dias": {
+      "titulo": "Fase 2 (31 a 60 dias): Núcleo de Colocação Multimercado e Mensageria",
+      "descricao": "Implantação da esteira de colocação sindicada até 100% de capacidade e integração da mensageria Microsoft 365 para captura automática de respostas.",
+      "gaps": [
+        "GAP-01",
+        "GAP-04",
+        "GAP-05",
+        "GAP-06"
+      ],
+      "marcos": [
+        "Quadro de colocação multimercado com cálculo de linhas escritas (written) e assinadas (signed lines) até 100% (GAP-01)",
+        "Conexão OAuth 2.0 delegada com Microsoft 365 e sincronização delta por Immutable IDs (GAP-04)",
+        "Captura automática de mensagens brutas MIME .eml com cálculo de checksum SHA-256 no servidor (GAP-05)",
+        "Módulo de exportação consolidada do Dossiê de Auditoria (Compliance Package) em arquivo ZIP (GAP-06)"
+      ],
+      "estimativa": "Estimativa hipotética sujeita à liberação de consentimento de administrador no Microsoft Entra ID para a conta de teste."
+    },
+    "fase3_90dias": {
+      "titulo": "Fase 3 (61 a 90 dias): Especialização Operacional e Governança Avançada",
+      "descricao": "Aprimoramento do fluxo de trabalho dos corretores com tarefas individuais, acompanhamento de condicionantes e formalização de minutas.",
+      "gaps": [
+        "GAP-07",
+        "GAP-03",
+        "GAP-09",
+        "GAP-10",
+        "GAP-11"
+      ],
+      "marcos": [
+        "Atribuição individual de responsáveis em propostas, checklists e alertas de prazos de renovação (GAP-07)",
+        "Painel informativo de consultas e formalização de recusas de resseguradores locais com regras parametrizáveis (GAP-03)",
+        "Módulo de acompanhamento de cláusulas suspensivas e subjectivities vinculadas ao aceite (GAP-09)",
+        "Geração automatizada de minutas em PDF de Nota de Cobertura e Closing Slips (GAP-10)",
+        "Modelagem estruturada inicial para Tratados de Resseguro Não Proporcionais (Excess of Loss) em camadas (GAP-11)"
+      ],
+      "estimativa": "Estimativa hipotética dependente de validação contínua com subscritores e corretores participantes do piloto."
+    }
+  },
+  "nonPrioritizedFeatures": [
+    {
+      "feature": "Envio 100% Automático de Ofertas sem Confirmação Humana",
+      "rationale": "No mercado de resseguro, o risco de responsabilidade civil profissional decorrente de envio inadvertido de termos imprecisos ou destinatários incorretos é inaceitável. Práticas de mercado consolidadas exigem confirmação deliberada do corretor antes do envio (human-in-the-loop)."
+    },
+    {
+      "feature": "Cobrança Automatizada via Cartão de Crédito e Paywall Imediato",
+      "rationale": "As decisões de produto (DEC-002 e DEC-005) orientam iniciar com 2 a 3 pilotos assistidos para validar o valor do fluxo. A cobrança está postergada por ausência de demanda validada e modelo comercial consolidado, e não por uma regra universal de mercado."
+    },
+    {
+      "feature": "Módulo Completo de Sinistros e Liquidação Financeira",
+      "rationale": "A regulação e liquidação financeira de sinistros de resseguro envolve complexidades de conciliação bancária e bureaus de liquidação que dispersariam a engenharia do foco nuclear: colocação e renovação de contratos."
+    },
+    {
+      "feature": "Conector Desktop Nativo / VSTO Add-in para Windows",
+      "rationale": "Como registrado na DEC-023, plugins locais em clientes Windows geram alta dívida de manutenção e incompatibilidade entre plataformas. A integração em nuvem via Microsoft Graph API no servidor é mais resiliente e sustentável."
+    },
+    {
+      "feature": "Emissão de Pareceres Jurídicos Regulatórios Automatizados",
+      "rationale": "A plataforma deve oferecer ferramentas de conformidade e conferência de evidências, nunca emitir pareceres jurídicos que declarem conformidade legal definitiva, cuja responsabilidade privativa cabe a advogados especializados."
+    }
+  ],
+  "limitations": {
+    "researchMode": "A pesquisa utilizou Gemini 3.8 Flash (High) com ferramentas web e de inspeção local de código. O modo oficial Deep Research não constava entre as ferramentas disponíveis no runtime Antigravity, limitação declarada de forma explícita.",
+    "legalDisclaimer": "Requisitos regulatórios e prazos normativos citados baseiam-se em resoluções e circulares públicas (CNSP/SUSEP) e constituem subsídios técnicos de engenharia de software e processos, não configurando parecer ou consultoria jurídica formal.",
+    "sourceEvolution": "Normativos do setor segurador e ressegurador brasileiro encontram-se em transição gradual em virtude do novo Marco Legal dos Seguros e publicação de novas resoluções do CNSP, demandando verificação contínua das datas de vigência.",
+    "enterpriseGraphGovernance": "A integração técnica com o Microsoft Graph depende de consentimento administrativo no Microsoft Entra ID das organizações usuárias, o que pode impor restrições adicionais em ambientes corporativos restritos.",
+    "freeTierSupabaseBoundaries": "Projetos Free no Supabase precisam manter suas próprias exportações via CLI e cópias off-site, pois backups automáticos do banco não incluem objetos de Storage e o recurso PITR é um add-on pago disponível para planos Pro, Team ou Enterprise.",
+    "sourceAccessLimitations": "Consultas automatizadas a URLs de portais de normas públicas (como in.gov.br) e entidades internacionais (como ACORD) podem sofrer bloqueios de WAF ou inconsistências de protocolo HTTP/2; as análises fundamentaram-se em canais oficiais primários verificados com resposta 200 (susep.gov.br, learn.microsoft.com, lloyds.com e ppl-london.com)."
+  }
+}
